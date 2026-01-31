@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(test:*)",
+      "Bash(npm run dev:*)",
+      "WebFetch(domain:api.chesstools.org)",
+      "WebFetch(domain:new.uschess.org)",
+      "WebFetch(domain:github.com)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ]
+  }
+}

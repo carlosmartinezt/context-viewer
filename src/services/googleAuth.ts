@@ -2,8 +2,10 @@
 // You'll need to replace this with your actual Client ID from Google Cloud Console
 export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
-// Scopes needed for Google Drive access
+// Scopes needed for Google Drive access and user info
 export const SCOPES = [
+  'https://www.googleapis.com/auth/userinfo.email',
+  'https://www.googleapis.com/auth/userinfo.profile',
   'https://www.googleapis.com/auth/drive.file',
   'https://www.googleapis.com/auth/drive.readonly',
 ].join(' ');
@@ -11,6 +13,7 @@ export const SCOPES = [
 // Allowed email addresses (whitelist)
 const ALLOWED_EMAILS = [
   'carlosmartinezt@gmail.com',
+  'lisvette.villar@gmail.com'
   // Add Jenny's email here
 ];
 
