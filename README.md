@@ -1,73 +1,90 @@
-# React + TypeScript + Vite
+# Chess Tracker
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A mobile-first web app for tracking kids' chess training, coaches, and tournaments.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Player Dashboard**: View ratings and upcoming events
+- **Coach Management**: Track lessons with multiple coaches
+- **Tournament Calendar**: Local weekends + travel tournaments with hotel reminders
+- **Curriculum Tracking**: Openings, tactics, endgames progress
+- **Google Drive Integration**: Reads/writes to markdown files in Drive
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React + TypeScript + Vite
+- TailwindCSS (mobile-first design)
+- Google OAuth 2.0 (whitelist-based auth)
+- Google Drive API
 
-## Expanding the ESLint configuration
+## Setup
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 1. Install dependencies
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 2. Configure Google OAuth
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project (or select existing)
+3. Enable the **Google Drive API**
+4. Configure **OAuth consent screen**:
+   - User type: External
+   - Add scopes: `drive.file`, `drive.readonly`
+5. Create **OAuth 2.0 Client ID**:
+   - Application type: Web application
+   - Authorized origins: `http://localhost:5173`
+   - Authorized redirect URIs: `http://localhost:5173`
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 3. Create .env.local
+
+```bash
+cp .env.example .env.local
 ```
+
+Edit `.env.local` and add your Client ID:
+
+```
+VITE_GOOGLE_CLIENT_ID=your-client-id-here.apps.googleusercontent.com
+```
+
+### 4. Update authorized users
+
+Edit `src/services/googleAuth.ts` and add authorized email addresses to `ALLOWED_EMAILS`.
+
+### 5. Run development server
+
+```bash
+npm run dev
+```
+
+Open http://localhost:5173
+
+## Deployment to Vercel
+
+1. Push to GitHub
+2. Import to [Vercel](https://vercel.com)
+3. Add environment variable: `VITE_GOOGLE_CLIENT_ID`
+4. Update Google OAuth authorized origins to include your Vercel URL
+
+## Project Structure
+
+```
+src/
+├── components/
+│   └── layout/       # Header, BottomNav, Layout
+├── hooks/            # useAuth
+├── pages/            # HomePage, CoachesPage, etc.
+├── services/         # googleAuth, googleDrive
+├── types/            # TypeScript interfaces
+└── utils/            # Helper functions
+```
+
+## Data Source
+
+The app reads markdown files from Google Drive:
+- `~/gdrive/claude/02_areas/chess/`
+
+Files: `chess.md`, `coaches.md`, `curriculum.md`, `training.md`, `tournaments.md`
