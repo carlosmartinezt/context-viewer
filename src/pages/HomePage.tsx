@@ -83,31 +83,43 @@ export function HomePage() {
   const { user } = useAuth();
 
   // Fetch chess folder
-  const { data: folderId } = useQuery({
+  const { data: folderId, error: folderError } = useQuery({
     queryKey: ['chessFolder', user?.accessToken],
     queryFn: () => findChessFolder(user!.accessToken),
     enabled: !!user?.accessToken,
   });
 
   // Fetch chess data (players)
-  const { data: chessData, isLoading: isLoadingChess } = useQuery({
+  const { data: chessData, isLoading: isLoadingChess, error: chessError } = useQuery({
     queryKey: ['chessData', user?.accessToken, folderId],
     queryFn: () => fetchChessData(user!.accessToken, folderId!),
     enabled: !!user?.accessToken && !!folderId,
   });
 
   // Fetch coaches data (lessons)
-  const { data: coachesData, isLoading: isLoadingCoaches } = useQuery({
+  const { data: coachesData, isLoading: isLoadingCoaches, error: coachesError } = useQuery({
     queryKey: ['coachesData', user?.accessToken, folderId],
     queryFn: () => fetchCoachesData(user!.accessToken, folderId!),
     enabled: !!user?.accessToken && !!folderId,
   });
 
   // Fetch tournaments data
-  const { data: tournamentsData, isLoading: isLoadingTournaments } = useQuery({
+  const { data: tournamentsData, isLoading: isLoadingTournaments, error: tournamentsError } = useQuery({
     queryKey: ['tournamentsData', user?.accessToken, folderId],
     queryFn: () => fetchTournamentsData(user!.accessToken, folderId!),
     enabled: !!user?.accessToken && !!folderId,
+  });
+
+  // Debug logging
+  console.log('HomePage Debug:', {
+    folderId,
+    folderError,
+    chessData,
+    chessError,
+    coachesData,
+    coachesError,
+    tournamentsData,
+    tournamentsError,
   });
 
   const players = chessData?.players || [];
@@ -127,6 +139,41 @@ export function HomePage() {
   ].slice(0, 5);
 
   const isLoading = isLoadingChess || isLoadingCoaches || isLoadingTournaments;
+  const hasError = folderError || chessError || coachesError || tournamentsError;
+
+  // Show error state
+  if (hasError) {
+    return (
+      <div className="py-4 space-y-4">
+        <div className="card bg-red-50 border border-red-200">
+          <h3 className="font-semibold text-red-900 mb-2">Error Loading Data</h3>
+          {folderError && (
+            <p className="text-sm text-red-700 mb-1">
+              Folder: {(folderError as Error).message}
+            </p>
+          )}
+          {chessError && (
+            <p className="text-sm text-red-700 mb-1">
+              Chess: {(chessError as Error).message}
+            </p>
+          )}
+          {coachesError && (
+            <p className="text-sm text-red-700 mb-1">
+              Coaches: {(coachesError as Error).message}
+            </p>
+          )}
+          {tournamentsError && (
+            <p className="text-sm text-red-700 mb-1">
+              Tournaments: {(tournamentsError as Error).message}
+            </p>
+          )}
+        </div>
+        <div className="text-sm text-gray-600">
+          Check the browser console for more details.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="py-4 space-y-6">
