@@ -6,13 +6,13 @@
 
 ## 🚀 Current Progress
 
-**Status:** ⏳ Scaffolding complete, needs Google OAuth setup
+**Status:** ✅ OAuth configured, ready to test Drive API integration
 
 **Code location:** `~/Workspace/chess-tracker/`
 
 | Phase | Status |
 |-------|--------|
-| Phase 1: Core Setup | ✅ Complete |
+| Phase 1: Core Setup | ⏳ In Progress (OAuth ✅, Drive API testing next) |
 | Phase 2: Editing | ❓ Not started |
 | Phase 3: Polish & Mobile | ❓ Not started |
 | Phase 4: Reminders | ❓ Not started |
@@ -22,18 +22,22 @@
 - ✅ Vite + React + TypeScript project
 - ✅ TailwindCSS with mobile-first design
 - ✅ Routing (Home, Coaches, Tournaments, Curriculum, Settings)
-- ✅ Google OAuth flow (UI complete, needs Client ID)
-- ✅ Google Drive service (scaffolded, needs OAuth to work)
+- ✅ Google OAuth flow (UI + Client ID configured)
+- ✅ Google Cloud project with Drive API enabled
+- ✅ Whitelist configured (Carlos + Jenny)
+- ✅ Google Drive service (scaffolded, ready to test)
 - ✅ Placeholder pages with mock data
 - ✅ Bottom navigation, card layout
+- ✅ GitHub repository connected
 
 ### Next Steps
 
-1. Set up Google Cloud project + OAuth credentials
-2. Add Client ID to `.env.local`
-3. Add Jenny's email to whitelist
-4. Test Drive API integration
+1. ~~Set up Google Cloud project + OAuth credentials~~ ✅ Done
+2. ~~Add Client ID to `.env.local`~~ ✅ Done
+3. ~~Add Jenny's email to whitelist~~ ✅ Done
+4. **Test Drive API integration** ⬅️ Next
 5. Build markdown parsing for chess files
+6. Connect UI to real Drive data
 
 ---
 
@@ -425,3 +429,5 @@ Sample reminder flow:
 | 2025-01-31 | Added mobile-first design, Vercel details, reminder options (OpenClaw integration) |
 | 2025-01-31 | Finalized decisions: Google Auth, both users, WhatsApp + Email reminders |
 | 2026-01-31 | **Scaffolded project** at `~/Workspace/chess-tracker/` — Vite + React + TailwindCSS + routing + auth flow |
+| 2026-01-31 | **OAuth configured** — Google Cloud project setup, Client ID added, whitelist configured (Carlos + Jenny) |
+| 2026-01-31 | **GitHub connected** — Created private repo at `carlosmartinezt/chess-tracker` |
