@@ -59,10 +59,12 @@ export function signInWithGoogle(): Promise<GoogleUser> {
       client_id: GOOGLE_CLIENT_ID,
       scope: SCOPES,
       callback: async (response) => {
-        if (response.error) {
-          reject(new Error(response.error));
+        if (response.error || !response.access_token) {
+          reject(new Error(response.error || 'No access token received'));
           return;
         }
+
+        const accessToken = response.access_token;
 
         // Get user info
         try {
@@ -70,7 +72,7 @@ export function signInWithGoogle(): Promise<GoogleUser> {
             'https://www.googleapis.com/oauth2/v2/userinfo',
             {
               headers: {
-                Authorization: `Bearer ${response.access_token}`,
+                Authorization: `Bearer ${accessToken}`,
               },
             }
           );
@@ -85,7 +87,7 @@ export function signInWithGoogle(): Promise<GoogleUser> {
             email: user.email,
             name: user.name,
             picture: user.picture,
-            accessToken: response.access_token,
+            accessToken,
           });
         } catch (error) {
           reject(error);
