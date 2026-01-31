@@ -1,5 +1,5 @@
-import { Coach, Lesson } from '../../types';
-import { extractMarkdownTable, extractSection, stripMarkdown } from '../../utils/markdownParser';
+import type { Coach, Lesson } from '../../types';
+import { extractMarkdownTable, stripMarkdown } from '../../utils/markdownParser';
 
 export interface CoachesData {
   coaches: Coach[];

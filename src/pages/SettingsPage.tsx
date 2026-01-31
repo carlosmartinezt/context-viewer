@@ -1,4 +1,11 @@
 import { useAuth } from '../hooks/useAuth';
+import { getUSCFProfileUrl } from '../services/uscfRatings';
+
+// Temporary player data - will be replaced with Google Drive data
+const players = [
+  { name: 'Rapha', uscfId: '30352946' },
+  { name: 'Rory', uscfId: '31446572' },
+];
 
 export function SettingsPage() {
   const { user, signOut } = useAuth();
@@ -32,23 +39,41 @@ export function SettingsPage() {
         </div>
       )}
 
-      {/* Online Accounts */}
+      {/* USCF IDs */}
       <section>
         <h3 className="text-md font-medium text-gray-900 mb-2">
-          🌐 Chess Accounts
+          🆔 USCF Member IDs
         </h3>
         <div className="card space-y-3">
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">USCF</span>
-            <span className="text-sm text-blue-600">Connected ✓</span>
+          {players.map((player) => (
+            <div key={player.name} className="flex justify-between items-center">
+              <span className="text-gray-900 font-medium">{player.name}</span>
+              {player.uscfId ? (
+                <a
+                  href={getUSCFProfileUrl(player.uscfId)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-600 hover:underline"
+                >
+                  {player.uscfId} →
+                </a>
+              ) : (
+                <span className="text-sm text-gray-400">Not set</span>
+              )}
+            </div>
+          ))}
+          <div className="pt-2 border-t border-gray-100">
+            <a
+              href="https://new.uschess.org/players/search"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-blue-600 hover:underline"
+            >
+              Find USCF ID →
+            </a>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">Chess.com</span>
-            <span className="text-sm text-blue-600">Connected ✓</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">Lichess</span>
-            <span className="text-sm text-blue-600">Connected ✓</span>
+          <div className="text-xs text-gray-500">
+            To update USCF IDs, edit chess.md in Google Drive
           </div>
         </div>
       </section>
@@ -62,7 +87,7 @@ export function SettingsPage() {
           <div className="text-sm text-gray-600">
             <p>Connected to Google Drive</p>
             <p className="text-xs text-gray-400 mt-1">
-              ~/gdrive/claude/02_areas/chess/
+              ~/gdrive/02_areas/chess/
             </p>
           </div>
         </div>

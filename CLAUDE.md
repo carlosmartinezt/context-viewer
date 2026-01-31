@@ -4,7 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Chess Tracker** is a mobile-first web app for tracking kids' chess training, coaches, and tournaments. It reads/writes directly to Google Drive markdown files stored at `~/gdrive/claude/02_areas/chess/`.
+**Chess Tracker** is a mobile-first **read-only dashboard** for tracking kids' chess training, coaches, and tournaments. It displays data from Google Drive markdown files stored at `~/gdrive/02_areas/chess/`.
+
+**Key Architecture Principle**: The website is READ-ONLY. All data modifications happen through Claude (terminal or OpenClaw), not through the website UI. The website can capture voice/text requests, but Claude processes them and updates the markdown files.
+
+See [docs/application-design.md](docs/application-design.md) for full architecture details.
 
 ## Tech Stack
 
@@ -13,7 +17,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Routing**: react-router-dom v7
 - **State**: @tanstack/react-query
 - **Auth**: Google OAuth 2.0 (whitelist-based)
-- **Data**: Google Drive API v3 (reads/writes markdown files)
+- **Data**: Google Drive API v3 (reads markdown files - **read-only**)
+- **Updates**: Claude (via terminal or OpenClaw) modifies markdown files
 
 ## Project Structure
 
@@ -58,7 +63,7 @@ This app uses **whitelist-based Google OAuth**:
 
 The app operates on markdown files in Google Drive:
 
-- **Expected path**: `~/gdrive/claude/02_areas/chess/`
+- **Expected path**: `~/gdrive/02_areas/chess/`
 - **File discovery**: `findChessFolder()` searches for a folder named "chess" (currently simplified search; in production should navigate full path hierarchy)
 - **Expected files**: `chess.md`, `coaches.md`, `curriculum.md`, `training.md`, `tournaments.md`
 - **API**: Uses Google Drive v3 REST API with user's access token from OAuth flow
@@ -116,11 +121,11 @@ Google API types (GoogleUser, DriveFile) are declared in their service files.
 | Routing | ✅ Complete |
 | Auth flow (UI) | ✅ Complete |
 | Placeholder pages | ✅ Complete |
-| Google OAuth integration | ⏳ Needs Client ID |
-| Google Drive read | ⏳ Needs OAuth working |
-| Google Drive write | ❓ Not started |
-| Markdown parsing | ❓ Not started |
-| Form-based editing | ❓ Not started |
+| Google OAuth integration | ✅ Complete |
+| Google Drive read | ✅ Complete |
+| Markdown parsing | ✅ Complete |
+| Voice/text input capture | ⏳ In progress |
+| OpenClaw integration | ❓ Not started |
 | PWA support | ❓ Not started |
 
 ## Commands
@@ -165,7 +170,9 @@ npm run lint         # Run ESLint
 - **Mobile-first**: Bottom navigation, large touch targets, card-based layout
 - **Source of truth**: Google Drive markdown files are the single source of truth (no database duplication)
 - **Whitelist auth**: Only specific Google accounts can access the app
-- **Direct file access**: App reads/writes markdown directly via Google Drive API
+- **Read-only display**: Website only reads and displays data - no direct editing
+- **Voice/text capture**: Users can dictate or type requests that Claude will process
+- **Claude as intelligence layer**: Claude understands natural language and updates markdown files
 
 ## Deployment
 
@@ -177,7 +184,7 @@ To deploy to Vercel:
 
 ## Data Files
 
-The app expects these markdown files in Google Drive at `~/gdrive/claude/02_areas/chess/`:
+The app expects these markdown files in Google Drive at `~/gdrive/02_areas/chess/`:
 
 - `chess.md` - Player overview, ratings, goals
 - `curriculum.md` - Topics, openings, tactics to learn

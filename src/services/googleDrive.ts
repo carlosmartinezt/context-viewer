@@ -4,7 +4,7 @@
 const DRIVE_API_BASE = 'https://www.googleapis.com/drive/v3';
 
 // The folder path in Google Drive
-// This will be configured to match: ~/gdrive/claude/02_areas/chess/
+// This will be configured to match: ~/gdrive/02_areas/chess/
 const CHESS_FOLDER_NAME = 'chess';
 
 export interface DriveFile {

@@ -3,6 +3,7 @@ import { useUSCFRating } from '../hooks/useUSCFRating';
 import { useQuery } from '@tanstack/react-query';
 import type { Player, Lesson, Tournament } from '../types';
 import { findChessFolder, fetchChessData, fetchCoachesData, fetchTournamentsData } from '../services/googleDrive';
+import { VoiceInput } from '../components/ui/VoiceInput';
 
 // Player emoji mapping
 const PLAYER_EMOJIS: Record<string, string> = {
@@ -281,17 +282,18 @@ export function HomePage() {
         )}
       </section>
 
-      {/* Quick Actions */}
-      <div className="flex gap-2">
-        <button className="btn-primary flex-1 flex items-center justify-center gap-2">
-          <span>+</span>
-          <span>Lesson</span>
-        </button>
-        <button className="btn-secondary flex-1 flex items-center justify-center gap-2">
-          <span>+</span>
-          <span>Tournament</span>
-        </button>
-      </div>
+      {/* Voice/Text Input for Claude */}
+      <section>
+        <h2 className="text-lg font-semibold text-gray-900 mb-3">
+          💬 Tell Claude
+        </h2>
+        <VoiceInput
+          placeholder="What's happening with chess?"
+          onSubmit={(text) => {
+            console.log('Request for Claude:', text);
+          }}
+        />
+      </section>
 
       {/* Debug info - remove in production */}
       {user && (

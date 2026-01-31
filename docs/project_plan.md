@@ -52,7 +52,7 @@
 
 ## 📁 Source Data
 
-**Location:** `~/gdrive/claude/02_areas/chess/`
+**Location:** `~/gdrive/02_areas/chess/`
 
 | File | Content |
 |------|---------|

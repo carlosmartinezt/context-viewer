@@ -1,4 +1,4 @@
-import { Player, OnlineAccount } from '../../types';
+import type { Player, OnlineAccount } from '../../types';
 import {
   extractMarkdownTable,
   extractCheckboxes,

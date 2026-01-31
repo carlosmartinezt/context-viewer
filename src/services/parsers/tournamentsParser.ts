@@ -1,4 +1,4 @@
-import { Tournament } from '../../types';
+import type { Tournament } from '../../types';
 import { extractMarkdownTable, stripMarkdown } from '../../utils/markdownParser';
 
 export interface TournamentsData {

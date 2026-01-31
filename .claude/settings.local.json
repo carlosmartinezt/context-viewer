@@ -7,7 +7,11 @@
       "WebFetch(domain:new.uschess.org)",
       "WebFetch(domain:github.com)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(npm run build:*)",
+      "WebSearch",
+      "Skill(commit-commands:commit)"
     ]
   }
 }

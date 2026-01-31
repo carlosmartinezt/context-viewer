@@ -1,4 +1,4 @@
-import { CurriculumTopic } from '../../types';
+import type { CurriculumTopic } from '../../types';
 import { extractMarkdownTable, stripMarkdown } from '../../utils/markdownParser';
 
 export interface CurriculumData {

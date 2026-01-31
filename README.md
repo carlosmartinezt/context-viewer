@@ -85,6 +85,6 @@ src/
 ## Data Source
 
 The app reads markdown files from Google Drive:
-- `~/gdrive/claude/02_areas/chess/`
+- `~/gdrive/02_areas/chess/`
 
 Files: `chess.md`, `coaches.md`, `curriculum.md`, `training.md`, `tournaments.md`
