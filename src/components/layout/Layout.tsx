@@ -7,7 +7,8 @@ import { useAuth } from '../../hooks/useAuth';
 export function Layout() {
   const location = useLocation();
   const { user } = useAuth();
-  const showVoiceInput = location.pathname !== '/settings';
+  const hideVoiceInputPaths = ['/settings', '/more'];
+  const showVoiceInput = !hideVoiceInputPaths.includes(location.pathname);
 
   return (
     <div className="min-h-screen bg-gray-50">

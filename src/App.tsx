@@ -7,6 +7,8 @@ import { CoachesPage } from './pages/CoachesPage';
 import { TournamentsPage } from './pages/TournamentsPage';
 import { CurriculumPage } from './pages/CurriculumPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { MorePage } from './pages/MorePage';
+import { FilePage } from './pages/FilePage';
 import { LoginPage } from './pages/LoginPage';
 
 const queryClient = new QueryClient();
@@ -54,7 +56,9 @@ function AppRoutes() {
         <Route path="coaches" element={<CoachesPage />} />
         <Route path="tournaments" element={<TournamentsPage />} />
         <Route path="curriculum" element={<CurriculumPage />} />
+        <Route path="more" element={<MorePage />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="file/:filename" element={<FilePage />} />
       </Route>
     </Routes>
   );

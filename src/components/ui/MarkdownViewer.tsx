@@ -1,12 +1,37 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useNavigate } from 'react-router-dom';
 
 interface MarkdownViewerProps {
   content: string;
   className?: string;
 }
 
+// Map known markdown files to routes
+const FILE_ROUTES: Record<string, string> = {
+  'chess.md': '/',
+  'coaches.md': '/coaches',
+  'tournaments.md': '/tournaments',
+  'curriculum.md': '/curriculum',
+  'training.md': '/file/training',
+};
+
 export function MarkdownViewer({ content, className = '' }: MarkdownViewerProps) {
+  const navigate = useNavigate();
+
+  // Handle link clicks - internal .md links navigate, external open in new tab
+  const handleLinkClick = (href: string | undefined, e: React.MouseEvent) => {
+    if (!href) return;
+
+    // Check if it's an internal .md file link
+    if (href.endsWith('.md') && !href.startsWith('http')) {
+      e.preventDefault();
+      const fileName = href.split('/').pop() || href;
+      const route = FILE_ROUTES[fileName] || `/file/${fileName.replace('.md', '')}`;
+      navigate(route);
+    }
+  };
+
   return (
     <div className={`prose prose-sm max-w-none ${className}`}>
       <ReactMarkdown
@@ -26,17 +51,21 @@ export function MarkdownViewer({ content, className = '' }: MarkdownViewerProps)
           td: ({ children }) => (
             <td className="px-2 py-1 border-b">{children}</td>
           ),
-          // Style links
-          a: ({ href, children }) => (
-            <a
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:underline"
-            >
-              {children}
-            </a>
-          ),
+          // Style links - handle internal .md links
+          a: ({ href, children }) => {
+            const isInternal = href?.endsWith('.md') && !href?.startsWith('http');
+            return (
+              <a
+                href={href}
+                onClick={(e) => handleLinkClick(href, e)}
+                target={isInternal ? undefined : '_blank'}
+                rel={isInternal ? undefined : 'noopener noreferrer'}
+                className="text-blue-600 hover:underline cursor-pointer"
+              >
+                {children}
+              </a>
+            );
+          },
           // Style checkboxes
           input: ({ type, checked }) => {
             if (type === 'checkbox') {
