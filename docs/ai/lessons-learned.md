@@ -113,6 +113,54 @@ useQuery({
 
 ---
 
+## Mobile UX
+
+### Lesson: Use native keyboard dictation, not Web Speech API
+**Problem:** Web Speech API (`SpeechRecognition`) on mobile causes repeated words. The `onresult` callback fires with interim and final results that get concatenated incorrectly.
+
+**Fix:** Remove custom mic button. Let users use the phone's native keyboard dictation (microphone on keyboard) which works reliably.
+
+---
+
+## Google Drive API
+
+### Lesson: Don't filter by mimeType for .md files
+**Problem:** Query `mimeType = 'text/markdown'` returns no files. Google Drive stores .md files with various MIME types (text/plain, text/x-markdown, etc.).
+
+**Fix:** Filter by filename instead:
+```typescript
+const query = `'${folderId}' in parents and name contains '.md' and trashed = false`;
+```
+
+---
+
+## Claude CLI Integration
+
+### Lesson: Claude CLI hangs when spawned from Node.js
+**Problem:** `spawn('claude', ['-p', prompt])` or `exec()` hangs indefinitely. The Claude process sits waiting.
+
+**Fix:** Redirect stdin from `/dev/null`:
+```bash
+claude -p 'prompt' --model haiku --dangerously-skip-permissions < /dev/null
+```
+
+### Lesson: Claude CLI needs --dangerously-skip-permissions for non-interactive use
+**Problem:** When running `claude -p` from a server, it hangs waiting for permission prompts to read files.
+
+**Fix:** Add `--dangerously-skip-permissions` flag. Safe when running on owner's machine with owner's files.
+
+### Lesson: Use exec() instead of spawn() with shell for Claude CLI
+**Problem:** Using `spawn('claude', args, { shell: true })` causes shell escaping issues with special characters in prompts (parentheses, quotes).
+
+**Fix:** Use `exec()` with properly escaped command string:
+```typescript
+const escapedPrompt = prompt.replace(/'/g, "'\\''");
+const command = `claude -p '${escapedPrompt}' --model haiku < /dev/null`;
+exec(command, { cwd: CHESS_DIR, timeout: 120000 }, callback);
+```
+
+---
+
 ## Template for New Lessons
 
 ```markdown

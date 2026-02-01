@@ -3,8 +3,11 @@
     "allow": [
       "Bash(gh repo create:*)",
       "Bash(gh auth:*)",
-      "WebFetch(domain:ratings.uschess.org)",
-      "Bash(curl:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(curl:*)",
+      "Bash(/usr/local/Cellar/node/25.5.0/bin/vercel:*)"
     ]
   }
 }

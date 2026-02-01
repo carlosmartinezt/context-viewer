@@ -57,6 +57,30 @@ docs/ai/                 # AI documentation (architecture, components, lessons)
 | Types | `src/types/index.ts` |
 | Markdown parsers | `src/services/parsers/*.ts` |
 
+## Claude Server (Mac)
+
+**Location:** `~/Workspace/chess-claude-server/`
+
+Express server that receives requests from the website and runs Claude CLI with access to Google Drive files.
+
+- Port: 3847 (Tailscale IP: 100.123.49.56)
+- Auto-starts via LaunchAgent: `~/Library/LaunchAgents/com.chess.claude-server.plist`
+- Logs: `~/Workspace/chess-claude-server/server.log`
+
+```bash
+# Check status
+launchctl list | grep chess
+
+# Stop/start
+launchctl unload ~/Library/LaunchAgents/com.chess.claude-server.plist
+launchctl load ~/Library/LaunchAgents/com.chess.claude-server.plist
+```
+
+**Gotchas when spawning Claude CLI from Node.js:**
+- Redirect stdin: `< /dev/null` - prevents hanging
+- Use `--dangerously-skip-permissions` - avoids permission prompts
+- Use `exec()` not `spawn()` with `shell: true` - better escaping
+
 ## Compounding Context
 
 **At the end of each session, update `docs/ai/lessons-learned.md` with:**

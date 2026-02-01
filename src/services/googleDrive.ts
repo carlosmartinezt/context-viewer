@@ -43,7 +43,9 @@ export async function listChessFiles(
   accessToken: string,
   folderId: string
 ): Promise<DriveFile[]> {
-  const query = `'${folderId}' in parents and mimeType = 'text/markdown' and trashed = false`;
+  // Note: Google Drive may store .md files as text/plain or text/x-markdown, not text/markdown
+  // Use name filter instead of mimeType for reliability
+  const query = `'${folderId}' in parents and name contains '.md' and trashed = false`;
 
   const response = await fetch(
     `${DRIVE_API_BASE}/files?q=${encodeURIComponent(query)}&fields=files(id,name,mimeType,modifiedTime)`,

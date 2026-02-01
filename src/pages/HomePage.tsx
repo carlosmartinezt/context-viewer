@@ -337,10 +337,8 @@ export function HomePage() {
           💬 Tell Claude
         </h2>
         <VoiceInput
+          userEmail={user?.email || ''}
           placeholder="What's happening with chess?"
-          onSubmit={(text) => {
-            console.log('Request for Claude:', text);
-          }}
         />
       </section>
 
