@@ -3,7 +3,8 @@
     "allow": [
       "Bash(gh repo create:*)",
       "Bash(gh auth:*)",
-      "WebFetch(domain:ratings.uschess.org)"
+      "WebFetch(domain:ratings.uschess.org)",
+      "Bash(curl:*)"
     ]
   }
 }

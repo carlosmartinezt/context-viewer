@@ -48,10 +48,10 @@ src/
 
 ### Authentication Flow
 
-This app uses **whitelist-based Google OAuth**:
+This app uses **whitelist-based Google OAuth** with redirect flow (not popup - popups fail on mobile):
 
-1. **Initialization**: `AuthProvider` loads Google Identity Services script dynamically via `initGoogleAuth()`
-2. **Sign-in flow**: User clicks login → `signInWithGoogle()` → Google OAuth popup → receives access token
+1. **Sign-in flow**: User clicks login → redirects to Google OAuth → Google redirects back with token in URL hash
+2. **Token parsing**: `AuthProvider` checks URL hash on init via `parseOAuthCallback()`, extracts access token
 3. **Whitelist check**: User email is validated against `ALLOWED_EMAILS` array in src/services/googleAuth.ts
 4. **Token storage**: User object (including access token) is stored in localStorage with key `chess-tracker-user`
 5. **Route protection**: `ProtectedRoute` wrapper in App.tsx checks auth state and redirects to `/login` if unauthenticated
@@ -191,6 +191,17 @@ To deploy to Vercel:
 3. Verify Google OAuth settings include the production URL (see Google Cloud Setup above)
 
 **After any new deployment**: If the Vercel URL changes, update both authorized JavaScript origins AND redirect URIs in Google Cloud Console to avoid `redirect_uri_mismatch` errors.
+
+### Deployment Gotchas
+
+- **Vercel env vars**: Use `printf` not `echo` when piping to `vercel env add` - echo adds trailing newlines that break OAuth client IDs (`invalid_client` error)
+- **Vercel CLI path**: After `npm install -g vercel`, may need: `export PATH="$HOME/.npm-global/bin:$PATH:$(npm config get prefix)/bin"`
+- **SPA routing**: The `vercel.json` with rewrites is required for client-side routing to work on page refresh (prevents 404s)
+
+### OAuth Implementation Notes
+
+- **Mobile OAuth**: Popup-based OAuth (`requestAccessToken()`) fails on mobile browsers - use redirect flow instead (implicit grant with `response_type=token`)
+- **Redirect URI**: Must match exactly what's configured in Google Cloud Console (no trailing slash differences)
 
 ## Data Files
 

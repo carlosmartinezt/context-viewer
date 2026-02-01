@@ -22,7 +22,9 @@ export interface USCFRatingData {
   onlineQuick?: number;
   onlineBlitz?: number;
   name?: string;
+  state?: string;
   memberExpiration?: string;
+  fetchedAt?: string;  // ISO timestamp when rating was fetched
 }
 
 // Coach types

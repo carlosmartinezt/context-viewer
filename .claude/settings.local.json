@@ -13,7 +13,10 @@
       "WebSearch",
       "Skill(commit-commands:commit)",
       "Bash(npm bin:*)",
-      "Bash(printf:*)"
+      "Bash(printf:*)",
+      "Skill(claude-md-management:revise-claude-md)",
+      "Skill(claude-md-management:revise-claude-md:*)",
+      "WebFetch(domain:forum.uschess.org)"
     ]
   }
 }

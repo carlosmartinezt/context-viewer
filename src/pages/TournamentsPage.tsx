@@ -67,11 +67,6 @@ export function TournamentsPage() {
         </div>
       </section>
 
-      <button className="btn-primary w-full flex items-center justify-center gap-2">
-        <span>+</span>
-        <span>Add Tournament</span>
-      </button>
-
       <section>
         <h2 className="text-lg font-semibold text-gray-900 mb-3">
           📜 Past Results

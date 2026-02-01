@@ -58,7 +58,7 @@ function parseOnlineAccounts(content: string): OnlineAccount[] {
   const accounts: OnlineAccount[] = [];
 
   rows.forEach((row) => {
-    const platform = row.Platform;
+    const platform = stripMarkdown(row.Platform || '');
     if (!platform || platform === 'Platform') return;
 
     // Parse each player's account

@@ -7,8 +7,8 @@ import { VoiceInput } from '../components/ui/VoiceInput';
 
 // Player emoji mapping
 const PLAYER_EMOJIS: Record<string, string> = {
-  rapha: '👧',
-  rory: '👦',
+  rapha: '👦',
+  rory: '👧',
 };
 
 // Player card component with USCF rating refresh
@@ -56,10 +56,10 @@ function PlayerCard({ player }: { player: Player & { emoji: string } }) {
         </div>
       )}
 
-      {/* Show last update time if available */}
-      {player.lastRatingUpdate && !isLoading && (
+      {/* Show last fetch time from USCF data */}
+      {uscfData?.fetchedAt && !isLoading && (
         <div className="text-xs text-gray-400 mt-1">
-          Updated {formatUpdateTime(player.lastRatingUpdate)}
+          Fetched {formatUpdateTime(uscfData.fetchedAt)}
         </div>
       )}
     </div>
