@@ -1,18 +1,11 @@
 import { useAuth } from '../hooks/useAuth';
-import { getUSCFProfileUrl } from '../services/uscfRatings';
-
-// Temporary player data - will be replaced with Google Drive data
-const players = [
-  { name: 'Rapha', uscfId: '30352946' },
-  { name: 'Rory', uscfId: '31446572' },
-];
 
 export function SettingsPage() {
   const { user, signOut } = useAuth();
 
   return (
     <div className="py-4 space-y-6">
-      <h2 className="text-lg font-semibold text-gray-900">⚙️ Settings</h2>
+      <h2 className="text-lg font-semibold text-gray-900">Settings</h2>
 
       {/* User Info */}
       {user && (
@@ -39,49 +32,10 @@ export function SettingsPage() {
         </div>
       )}
 
-      {/* USCF IDs */}
-      <section>
-        <h3 className="text-md font-medium text-gray-900 mb-2">
-          🆔 USCF Member IDs
-        </h3>
-        <div className="card space-y-3">
-          {players.map((player) => (
-            <div key={player.name} className="flex justify-between items-center">
-              <span className="text-gray-900 font-medium">{player.name}</span>
-              {player.uscfId ? (
-                <a
-                  href={getUSCFProfileUrl(player.uscfId)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-blue-600 hover:underline"
-                >
-                  {player.uscfId} →
-                </a>
-              ) : (
-                <span className="text-sm text-gray-400">Not set</span>
-              )}
-            </div>
-          ))}
-          <div className="pt-2 border-t border-gray-100">
-            <a
-              href="https://new.uschess.org/players/search"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-blue-600 hover:underline"
-            >
-              Find USCF ID →
-            </a>
-          </div>
-          <div className="text-xs text-gray-500">
-            To update USCF IDs, edit chess.md in Google Drive
-          </div>
-        </div>
-      </section>
-
       {/* Data Source */}
       <section>
         <h3 className="text-md font-medium text-gray-900 mb-2">
-          📁 Data Source
+          Data Source
         </h3>
         <div className="card">
           <div className="text-sm text-gray-600">
@@ -90,6 +44,31 @@ export function SettingsPage() {
               ~/gdrive/02_areas/chess/
             </p>
           </div>
+        </div>
+      </section>
+
+      {/* Useful Links */}
+      <section>
+        <h3 className="text-md font-medium text-gray-900 mb-2">
+          Useful Links
+        </h3>
+        <div className="card space-y-2">
+          <a
+            href="https://new.uschess.org/players/search"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block text-sm text-blue-600 hover:underline"
+          >
+            Find USCF ID
+          </a>
+          <a
+            href="https://ratings.uschess.org"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block text-sm text-blue-600 hover:underline"
+          >
+            USCF Ratings Lookup
+          </a>
         </div>
       </section>
 
@@ -103,7 +82,7 @@ export function SettingsPage() {
 
       {/* Version */}
       <div className="text-center text-xs text-gray-400">
-        Chess Tracker v0.1.0
+        Chess Tracker v0.2.0
       </div>
     </div>
   );

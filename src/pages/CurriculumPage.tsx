@@ -1,101 +1,49 @@
-const curriculum = {
-  openings: [
-    { name: 'Italian Game', status: 'solid', player: 'Rapha' },
-    { name: 'Sicilian Defense', status: 'learning', player: 'Rapha' },
-    { name: 'London System', status: 'learning', player: 'Rory' },
-  ],
-  tactics: [
-    { name: 'Forks', status: 'solid' },
-    { name: 'Pins', status: 'solid' },
-    { name: 'Discovered Attacks', status: 'learning' },
-    { name: 'Back Rank Mates', status: 'practicing' },
-  ],
-  endgames: [
-    { name: 'King + Queen vs King', status: 'solid' },
-    { name: 'King + Rook vs King', status: 'practicing' },
-    { name: 'Lucena Position', status: 'learning' },
-  ],
-};
-
-const statusColors = {
-  solid: 'bg-green-100 text-green-700',
-  practicing: 'bg-blue-100 text-blue-700',
-  learning: 'bg-amber-100 text-amber-700',
-};
+import { useAuth } from '../hooks/useAuth';
+import { useQuery } from '@tanstack/react-query';
+import { findChessFolder, readChessFile } from '../services/googleDrive';
+import { MarkdownViewer } from '../components/ui/MarkdownViewer';
 
 export function CurriculumPage() {
+  const { user } = useAuth();
+
+  const { data: folderId } = useQuery({
+    queryKey: ['chessFolder', user?.accessToken],
+    queryFn: () => findChessFolder(user!.accessToken),
+    enabled: !!user?.accessToken,
+  });
+
+  const { data: content, isLoading, error } = useQuery({
+    queryKey: ['curriculumFile', user?.accessToken, folderId],
+    queryFn: () => readChessFile(user!.accessToken, folderId!, 'curriculum.md'),
+    enabled: !!user?.accessToken && !!folderId,
+  });
+
+  if (error) {
+    return (
+      <div className="py-4">
+        <div className="card bg-red-50 border border-red-200">
+          <h3 className="font-semibold text-red-900 mb-2">Error</h3>
+          <p className="text-sm text-red-700">{(error as Error).message}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="py-4 space-y-6">
-      <section>
-        <h2 className="text-lg font-semibold text-gray-900 mb-3">
-          ♟️ Openings
-        </h2>
-        <div className="space-y-2">
-          {curriculum.openings.map((item) => (
-            <div key={item.name} className="card card-hover cursor-pointer">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium text-gray-900">{item.name}</div>
-                  {item.player && (
-                    <div className="text-xs text-gray-500">{item.player}</div>
-                  )}
-                </div>
-                <span
-                  className={`text-xs px-2 py-0.5 rounded-full ${
-                    statusColors[item.status as keyof typeof statusColors]
-                  }`}
-                >
-                  {item.status}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section>
-        <h2 className="text-lg font-semibold text-gray-900 mb-3">
-          🧩 Tactics
-        </h2>
-        <div className="space-y-2">
-          {curriculum.tactics.map((item) => (
-            <div key={item.name} className="card card-hover cursor-pointer">
-              <div className="flex items-center justify-between">
-                <div className="font-medium text-gray-900">{item.name}</div>
-                <span
-                  className={`text-xs px-2 py-0.5 rounded-full ${
-                    statusColors[item.status as keyof typeof statusColors]
-                  }`}
-                >
-                  {item.status}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section>
-        <h2 className="text-lg font-semibold text-gray-900 mb-3">
-          🏁 Endgames
-        </h2>
-        <div className="space-y-2">
-          {curriculum.endgames.map((item) => (
-            <div key={item.name} className="card card-hover cursor-pointer">
-              <div className="flex items-center justify-between">
-                <div className="font-medium text-gray-900">{item.name}</div>
-                <span
-                  className={`text-xs px-2 py-0.5 rounded-full ${
-                    statusColors[item.status as keyof typeof statusColors]
-                  }`}
-                >
-                  {item.status}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+    <div className="py-4">
+      <div className="card">
+        {isLoading ? (
+          <div className="animate-pulse space-y-3">
+            <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+            <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+          </div>
+        ) : content ? (
+          <MarkdownViewer content={content} />
+        ) : (
+          <p className="text-gray-500">No content found</p>
+        )}
+      </div>
     </div>
   );
 }

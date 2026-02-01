@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { callClaude } from '../../services/claudeServer';
 
 interface VoiceInputProps {
@@ -34,6 +35,7 @@ function loadSavedRequests(): SavedRequest[] {
 }
 
 export function VoiceInput({ userEmail, placeholder = "What's happening with chess?" }: VoiceInputProps) {
+  const queryClient = useQueryClient();
   const [text, setText] = useState('');
   const [status, setStatus] = useState<RequestStatus>('idle');
   const [currentResponse, setCurrentResponse] = useState<string | null>(null);
@@ -73,6 +75,10 @@ export function VoiceInput({ userEmail, placeholder = "What's happening with che
       setCurrentResponse(response);
       setStatus('success');
       setText('');
+
+      // Invalidate all queries to refresh data from Google Drive
+      // Claude may have updated any markdown file
+      await queryClient.invalidateQueries();
     } catch (err) {
       // Update request as failed
       newRequest.status = 'failed';
@@ -131,10 +137,10 @@ export function VoiceInput({ userEmail, placeholder = "What's happening with che
             {status === 'calling' ? (
               <>
                 <span className="animate-spin">⏳</span>
-                Calling...
+                Marinating...
               </>
             ) : (
-              'Call Claude'
+              'Ask Claude'
             )}
           </button>
         </div>

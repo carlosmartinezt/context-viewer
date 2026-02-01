@@ -1,32 +1,48 @@
-const coaches = [
-  { name: 'Yeisson Gutierrez', students: ['Rapha', 'Rory'] },
-  { name: 'Kim Steven Yap', students: ['Rapha', 'Rory'] },
-  { name: 'Jerich Cajeras', students: ['Rapha', 'Rory'] },
-];
+import { useAuth } from '../hooks/useAuth';
+import { useQuery } from '@tanstack/react-query';
+import { findChessFolder, readChessFile } from '../services/googleDrive';
+import { MarkdownViewer } from '../components/ui/MarkdownViewer';
 
 export function CoachesPage() {
-  return (
-    <div className="py-4 space-y-4">
-      <h2 className="text-lg font-semibold text-gray-900">🎓 Coaches</h2>
+  const { user } = useAuth();
 
-      <div className="space-y-3">
-        {coaches.map((coach) => (
-          <div key={coach.name} className="card card-hover cursor-pointer">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-medium text-gray-900">{coach.name}</div>
-                <div className="text-sm text-gray-500">
-                  Students: {coach.students.join(', ')}
-                </div>
-              </div>
-              <span className="text-gray-400">→</span>
-            </div>
-          </div>
-        ))}
+  const { data: folderId } = useQuery({
+    queryKey: ['chessFolder', user?.accessToken],
+    queryFn: () => findChessFolder(user!.accessToken),
+    enabled: !!user?.accessToken,
+  });
+
+  const { data: content, isLoading, error } = useQuery({
+    queryKey: ['coachesFile', user?.accessToken, folderId],
+    queryFn: () => readChessFile(user!.accessToken, folderId!, 'coaches.md'),
+    enabled: !!user?.accessToken && !!folderId,
+  });
+
+  if (error) {
+    return (
+      <div className="py-4">
+        <div className="card bg-red-50 border border-red-200">
+          <h3 className="font-semibold text-red-900 mb-2">Error</h3>
+          <p className="text-sm text-red-700">{(error as Error).message}</p>
+        </div>
       </div>
+    );
+  }
 
-      <div className="text-center text-sm text-gray-500 mt-8">
-        <p>Tap a coach to view schedule and details</p>
+  return (
+    <div className="py-4">
+      <div className="card">
+        {isLoading ? (
+          <div className="animate-pulse space-y-3">
+            <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+            <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+          </div>
+        ) : content ? (
+          <MarkdownViewer content={content} />
+        ) : (
+          <p className="text-gray-500">No content found</p>
+        )}
       </div>
     </div>
   );
