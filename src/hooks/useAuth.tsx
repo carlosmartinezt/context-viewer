@@ -3,12 +3,15 @@ import {
   useContext,
   useState,
   useEffect,
+  useCallback,
   type ReactNode,
 } from 'react';
 import {
   type GoogleUser,
   initGoogleAuth,
   signInWithGoogle,
+  parseOAuthCallback,
+  fetchGoogleUserInfo,
   GOOGLE_CLIENT_ID,
 } from '../services/googleAuth';
 
@@ -19,6 +22,7 @@ interface AuthContextType {
   signIn: () => Promise<void>;
   signOut: () => void;
   accessToken: string | null;
+  handleOAuthCallback: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -30,16 +34,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Initialize Google Auth and check for stored user
+  // Handle OAuth callback from URL hash
+  const handleOAuthCallback = useCallback(async (): Promise<boolean> => {
+    const callback = parseOAuthCallback();
+    if (!callback) return false;
+
+    try {
+      setLoading(true);
+      setError(null);
+      const googleUser = await fetchGoogleUserInfo(callback.accessToken);
+      setUser(googleUser);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(googleUser));
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Authentication failed');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Initialize and check for OAuth callback or stored user
   useEffect(() => {
     async function init() {
       try {
-        // Check for stored user (token may be expired, will need re-auth)
+        // First, check for OAuth callback in URL hash (redirect flow)
+        const callback = parseOAuthCallback();
+        if (callback) {
+          const googleUser = await fetchGoogleUserInfo(callback.accessToken);
+          setUser(googleUser);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(googleUser));
+          setLoading(false);
+          return;
+        }
+
+        // Check for stored user
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
           const parsed = JSON.parse(stored);
-          // Note: Access token will likely be expired, but we keep user info
-          // They'll need to re-authenticate to get a fresh token
           setUser(parsed);
         }
 
@@ -49,6 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (err) {
         console.error('Auth init error:', err);
+        setError(err instanceof Error ? err.message : 'Authentication failed');
       } finally {
         setLoading(false);
       }
@@ -61,14 +94,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       setError(null);
-      const googleUser = await signInWithGoogle();
-      setUser(googleUser);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(googleUser));
+      // This will redirect to Google - won't return
+      await signInWithGoogle();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign in failed');
-      throw err;
-    } finally {
       setLoading(false);
+      throw err;
     }
   };
 
@@ -86,6 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signIn,
         signOut,
         accessToken: user?.accessToken || null,
+        handleOAuthCallback,
       }}
     >
       {children}

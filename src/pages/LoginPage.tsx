@@ -1,10 +1,36 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { GOOGLE_CLIENT_ID } from '../services/googleAuth';
 
 export function LoginPage() {
-  const { signIn, loading, error } = useAuth();
+  const { signIn, loading, error, user, handleOAuthCallback } = useAuth();
   const [localError, setLocalError] = useState<string | null>(null);
+  const [processingCallback, setProcessingCallback] = useState(false);
+  const navigate = useNavigate();
+
+  // Check for OAuth callback on mount
+  useEffect(() => {
+    async function checkCallback() {
+      // Check if URL has OAuth response in hash
+      if (window.location.hash.includes('access_token')) {
+        setProcessingCallback(true);
+        const success = await handleOAuthCallback();
+        setProcessingCallback(false);
+        if (success) {
+          navigate('/', { replace: true });
+        }
+      }
+    }
+    checkCallback();
+  }, [handleOAuthCallback, navigate]);
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user && !processingCallback) {
+      navigate('/', { replace: true });
+    }
+  }, [user, navigate, processingCallback]);
 
   const handleSignIn = async () => {
     try {
@@ -16,6 +42,7 @@ export function LoginPage() {
   };
 
   const isConfigured = Boolean(GOOGLE_CLIENT_ID);
+  const isProcessing = loading || processingCallback;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
@@ -45,10 +72,10 @@ export function LoginPage() {
           <>
             <button
               onClick={handleSignIn}
-              disabled={loading}
+              disabled={isProcessing}
               className="w-full bg-white border border-gray-300 rounded-lg py-3 px-4 flex items-center justify-center gap-3 font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-colors disabled:opacity-50"
             >
-              {loading ? (
+              {isProcessing ? (
                 <span>Signing in...</span>
               ) : (
                 <>

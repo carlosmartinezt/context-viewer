@@ -1,5 +1,4 @@
 // Google OAuth configuration
-// You'll need to replace this with your actual Client ID from Google Cloud Console
 export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 // Scopes needed for Google Drive access and user info
@@ -31,95 +30,76 @@ export function isAuthorizedUser(email: string): boolean {
   );
 }
 
-// Initialize Google Identity Services
+// Initialize Google Auth - just check configuration
 export function initGoogleAuth(): Promise<void> {
   return new Promise((resolve, reject) => {
     if (!GOOGLE_CLIENT_ID) {
       reject(new Error('Google Client ID not configured'));
       return;
     }
-
-    // Load the Google Identity Services script
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error('Failed to load Google Identity Services'));
-    document.head.appendChild(script);
+    resolve();
   });
 }
 
-// Sign in with Google
+// Start OAuth flow - redirects to Google
 export function signInWithGoogle(): Promise<GoogleUser> {
-  return new Promise((resolve, reject) => {
-    if (!window.google) {
-      reject(new Error('Google Identity Services not loaded'));
-      return;
-    }
-
-    const client = window.google.accounts.oauth2.initTokenClient({
-      client_id: GOOGLE_CLIENT_ID,
-      scope: SCOPES,
-      callback: async (response) => {
-        if (response.error || !response.access_token) {
-          reject(new Error(response.error || 'No access token received'));
-          return;
-        }
-
-        const accessToken = response.access_token;
-
-        // Get user info
-        try {
-          const userInfo = await fetch(
-            'https://www.googleapis.com/oauth2/v2/userinfo',
-            {
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-              },
-            }
-          );
-          const user = await userInfo.json();
-
-          if (!isAuthorizedUser(user.email)) {
-            reject(new Error('Unauthorized user'));
-            return;
-          }
-
-          resolve({
-            email: user.email,
-            name: user.name,
-            picture: user.picture,
-            accessToken,
-          });
-        } catch (error) {
-          reject(error);
-        }
-      },
-    });
-
-    client.requestAccessToken();
+  // Build the OAuth URL for implicit grant flow
+  const params = new URLSearchParams({
+    client_id: GOOGLE_CLIENT_ID,
+    redirect_uri: window.location.origin,
+    response_type: 'token',
+    scope: SCOPES,
+    include_granted_scopes: 'true',
+    state: 'login',
   });
+
+  // Redirect to Google OAuth
+  window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
+
+  // This promise won't resolve - we're redirecting away
+  return new Promise(() => {});
 }
 
-// Type declaration for Google Identity Services
-declare global {
-  interface Window {
-    google: {
-      accounts: {
-        oauth2: {
-          initTokenClient: (config: {
-            client_id: string;
-            scope: string;
-            callback: (response: {
-              access_token?: string;
-              error?: string;
-            }) => void;
-          }) => {
-            requestAccessToken: () => void;
-          };
-        };
-      };
-    };
+// Parse OAuth callback from URL hash
+export function parseOAuthCallback(): { accessToken: string } | null {
+  const hash = window.location.hash.substring(1);
+  if (!hash) return null;
+
+  const params = new URLSearchParams(hash);
+  const accessToken = params.get('access_token');
+  const state = params.get('state');
+
+  if (accessToken && state === 'login') {
+    // Clear the hash from URL
+    window.history.replaceState(null, '', window.location.pathname);
+    return { accessToken };
   }
+
+  return null;
+}
+
+// Fetch user info from Google
+export async function fetchGoogleUserInfo(accessToken: string): Promise<GoogleUser> {
+  const response = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch user info');
+  }
+
+  const user = await response.json();
+
+  if (!isAuthorizedUser(user.email)) {
+    throw new Error('Unauthorized user');
+  }
+
+  return {
+    email: user.email,
+    name: user.name,
+    picture: user.picture,
+    accessToken,
+  };
 }

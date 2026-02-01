@@ -11,7 +11,9 @@
       "Bash(git push:*)",
       "Bash(npm run build:*)",
       "WebSearch",
-      "Skill(commit-commands:commit)"
+      "Skill(commit-commands:commit)",
+      "Bash(npm bin:*)",
+      "Bash(printf:*)"
     ]
   }
 }

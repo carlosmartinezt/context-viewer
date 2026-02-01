@@ -124,6 +124,7 @@ Google API types (GoogleUser, DriveFile) are declared in their service files.
 | Google OAuth integration | ✅ Complete |
 | Google Drive read | ✅ Complete |
 | Markdown parsing | ✅ Complete |
+| Vercel deployment | ✅ Complete |
 | Voice/text input capture | ⏳ In progress |
 | OpenClaw integration | ❓ Not started |
 | PWA support | ❓ Not started |
@@ -161,9 +162,15 @@ npm run lint         # Run ESLint
    - Add scopes: `drive.file`, `drive.readonly`
 4. Create OAuth 2.0 Client ID:
    - Application type: Web application
-   - Authorized origins: `http://localhost:5173` (and production URL when deployed)
-   - Authorized redirect URIs: `http://localhost:5173` (and production URL)
+   - Authorized JavaScript origins:
+     - `http://localhost:5173`
+     - `https://chess-tracker-taupe.vercel.app`
+   - Authorized redirect URIs:
+     - `http://localhost:5173`
+     - `https://chess-tracker-taupe.vercel.app`
 5. Copy Client ID to `.env.local` as `VITE_GOOGLE_CLIENT_ID`
+
+**Important**: Both origins AND redirect URIs must be configured for OAuth to work. A `redirect_uri_mismatch` error means the production URL is missing from these settings.
 
 ## Design Principles
 
@@ -176,11 +183,14 @@ npm run lint         # Run ESLint
 
 ## Deployment
 
+**Production URL**: https://chess-tracker-taupe.vercel.app
+
 To deploy to Vercel:
-1. Push code to GitHub
-2. Import repository to [Vercel](https://vercel.com)
-3. Add environment variable: `VITE_GOOGLE_CLIENT_ID`
-4. Update Google OAuth authorized origins/redirect URIs to include Vercel URL
+1. Run `vercel --prod` from the project directory
+2. Ensure environment variable `VITE_GOOGLE_CLIENT_ID` is set in Vercel (already configured)
+3. Verify Google OAuth settings include the production URL (see Google Cloud Setup above)
+
+**After any new deployment**: If the Vercel URL changes, update both authorized JavaScript origins AND redirect URIs in Google Cloud Console to avoid `redirect_uri_mismatch` errors.
 
 ## Data Files
 
