@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { useUSCFRating } from '../hooks/useUSCFRating';
 import { useQuery } from '@tanstack/react-query';
-import type { Player, Lesson, Tournament } from '../types';
+import type { Player, Lesson, Tournament, USCFRatingData } from '../types';
 import { findChessFolder, fetchChessData, fetchCoachesData, fetchTournamentsData } from '../services/googleDrive';
+import { readRatingsCache, saveRatingToCache } from '../services/ratingsCache';
+import { fetchUSCFRating } from '../services/uscfRatings';
 import { VoiceInput } from '../components/ui/VoiceInput';
 
 // Player emoji mapping
@@ -11,25 +13,45 @@ const PLAYER_EMOJIS: Record<string, string> = {
   rory: '👧',
 };
 
+interface PlayerCardProps {
+  player: Player & { emoji: string };
+  cachedRating?: USCFRatingData;
+  onRatingRefresh?: (uscfId: string, data: USCFRatingData) => void;
+}
+
 // Player card component with USCF rating refresh
-function PlayerCard({ player }: { player: Player & { emoji: string } }) {
-  const { data: uscfData, isLoading, error, refetch } = useUSCFRating(player.uscfId);
+function PlayerCard({ player, cachedRating, onRatingRefresh }: PlayerCardProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [freshRating, setFreshRating] = useState<USCFRatingData | null>(null);
 
   const handleRefresh = async () => {
-    if (player.uscfId) {
-      await refetch();
+    if (!player.uscfId) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const data = await fetchUSCFRating(player.uscfId);
+      setFreshRating(data);
+      onRatingRefresh?.(player.uscfId, data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Use USCF regular rating if available, otherwise use stored rating
-  const displayRating = uscfData?.regular ?? player.currentRating;
+  // Priority: fresh fetch > cached from Drive > never show placeholder
+  const ratingData = freshRating || cachedRating;
+  const displayRating = ratingData?.regular;
 
   return (
     <div className="card text-center relative">
       <div className="text-3xl mb-2">{player.emoji}</div>
       <div className="font-semibold text-gray-900">{player.name}</div>
       <div className="text-2xl font-bold text-blue-600">
-        {displayRating}
+        {displayRating ?? '—'}
       </div>
       <div className="text-xs text-gray-500">Age {player.age}</div>
 
@@ -52,14 +74,14 @@ function PlayerCard({ player }: { player: Player & { emoji: string } }) {
       {/* Show error if fetch failed */}
       {error && (
         <div className="text-xs text-red-500 mt-1">
-          Failed to fetch
+          {error}
         </div>
       )}
 
-      {/* Show last fetch time from USCF data */}
-      {uscfData?.fetchedAt && !isLoading && (
+      {/* Show last fetch time */}
+      {ratingData?.fetchedAt && !isLoading && (
         <div className="text-xs text-gray-400 mt-1">
-          Fetched {formatUpdateTime(uscfData.fetchedAt)}
+          Fetched {formatUpdateTime(ratingData.fetchedAt)}
         </div>
       )}
     </div>
@@ -82,6 +104,7 @@ function formatUpdateTime(isoString: string): string {
 
 export function HomePage() {
   const { user } = useAuth();
+  const [ratingsCache, setRatingsCache] = useState<Record<string, USCFRatingData>>({});
 
   // Fetch chess folder
   const { data: folderId, error: folderError } = useQuery({
@@ -89,6 +112,28 @@ export function HomePage() {
     queryFn: () => findChessFolder(user!.accessToken),
     enabled: !!user?.accessToken,
   });
+
+  // Fetch ratings cache from Google Drive
+  useQuery({
+    queryKey: ['ratingsCache', user?.accessToken, folderId],
+    queryFn: async () => {
+      const cache = await readRatingsCache(user!.accessToken, folderId!);
+      setRatingsCache(cache);
+      return cache;
+    },
+    enabled: !!user?.accessToken && !!folderId,
+  });
+
+  // Handle rating refresh - save to Google Drive
+  const handleRatingRefresh = async (uscfId: string, data: USCFRatingData) => {
+    // Update local state immediately
+    setRatingsCache(prev => ({ ...prev, [uscfId]: data }));
+
+    // Save to Google Drive in background
+    if (user?.accessToken && folderId) {
+      saveRatingToCache(user.accessToken, folderId, uscfId, data);
+    }
+  };
 
   // Fetch chess data (players)
   const { data: chessData, isLoading: isLoadingChess, error: chessError } = useQuery({
@@ -121,6 +166,7 @@ export function HomePage() {
     coachesError,
     tournamentsData,
     tournamentsError,
+    ratingsCache,
   });
 
   const players = chessData?.players || [];
@@ -192,6 +238,9 @@ export function HomePage() {
         ) : (
           players.map((player) => {
             const emoji = PLAYER_EMOJIS[player.id] || '🧒';
+            const uscfId = chessData?.onlineAccounts
+              .find(a => a.platform === 'USCF' && a.playerId === player.id)
+              ?.username;
             return (
               <PlayerCard
                 key={player.id}
@@ -199,10 +248,10 @@ export function HomePage() {
                   ...player,
                   emoji,
                   currentRating: player.rating,
-                  uscfId: chessData?.onlineAccounts
-                    .find(a => a.platform === 'USCF' && a.playerId === player.id)
-                    ?.username || undefined
+                  uscfId: uscfId || undefined
                 }}
+                cachedRating={uscfId ? ratingsCache[uscfId] : undefined}
+                onRatingRefresh={handleRatingRefresh}
               />
             );
           })

@@ -1,214 +1,67 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## Quick Context
 
-## Project Overview
+**Chess Tracker** - Mobile-first read-only dashboard for kids' chess training. Reads markdown files from Google Drive, displays player ratings, lessons, tournaments.
 
-**Chess Tracker** is a mobile-first **read-only dashboard** for tracking kids' chess training, coaches, and tournaments. It displays data from Google Drive markdown files stored at `~/gdrive/02_areas/chess/`.
+**Key Principle**: Website is READ-ONLY. Claude (terminal/OpenClaw) modifies markdown files, not the website.
 
-**Key Architecture Principle**: The website is READ-ONLY. All data modifications happen through Claude (terminal or OpenClaw), not through the website UI. The website can capture voice/text requests, but Claude processes them and updates the markdown files.
+**Production**: https://chess-tracker-taupe.vercel.app
 
-See [docs/application-design.md](docs/application-design.md) for full architecture details.
+## Before You Start
+
+Read these docs for context:
+- [docs/ai/architecture.md](docs/ai/architecture.md) - Data flow, how requests move through the system
+- [docs/ai/component-library.md](docs/ai/component-library.md) - UI primitives (DO NOT reinvent)
+- [docs/ai/lessons-learned.md](docs/ai/lessons-learned.md) - Hard bugs and fixes (CHECK BEFORE DEBUGGING)
+- [public/llms.txt](public/llms.txt) - External API specs
+
+## Commands
+
+```bash
+npm run dev      # Dev server (localhost:5173)
+npm run build    # TypeScript check + production build
+npm run lint     # ESLint
+
+# Deploy (need PATH fix first)
+export PATH="$HOME/.npm-global/bin:$PATH:$(npm config get prefix)/bin"
+vercel --prod
+```
 
 ## Tech Stack
 
-- **Framework**: React 19 + TypeScript + Vite
-- **Styling**: TailwindCSS v4 (via @tailwindcss/vite plugin)
-- **Routing**: react-router-dom v7
-- **State**: @tanstack/react-query
-- **Auth**: Google OAuth 2.0 (whitelist-based)
-- **Data**: Google Drive API v3 (reads markdown files - **read-only**)
-- **Updates**: Claude (via terminal or OpenClaw) modifies markdown files
+React 19 + TypeScript + Vite + TailwindCSS v4 + React Query + React Router v7
 
 ## Project Structure
 
 ```
 src/
-├── components/
-│   ├── layout/          # Header, BottomNav, Layout
-│   └── ui/              # Reusable UI components (empty, add as needed)
-├── hooks/
-│   └── useAuth.tsx      # Auth context and hook
-├── pages/
-│   ├── HomePage.tsx     # Dashboard with player cards, weekly schedule
-│   ├── CoachesPage.tsx  # Coach list and management
-│   ├── TournamentsPage.tsx  # Tournament calendar
-│   ├── CurriculumPage.tsx   # Learning progress
-│   ├── SettingsPage.tsx     # User settings
-│   └── LoginPage.tsx        # Google OAuth login
-├── services/
-│   ├── googleAuth.ts    # OAuth setup, whitelist check
-│   └── googleDrive.ts   # Drive API for reading/writing files
-├── types/
-│   └── index.ts         # TypeScript interfaces
-└── utils/               # Helper functions (empty, add as needed)
+├── components/layout/   # Header, BottomNav, Layout
+├── components/ui/       # VoiceInput
+├── pages/               # HomePage, CoachesPage, etc.
+├── services/            # googleAuth, googleDrive, ratingsCache, uscfRatings
+├── services/parsers/    # Markdown → TypeScript
+├── hooks/               # useAuth
+├── types/               # TypeScript interfaces
+api/
+└── uscf-rating.ts       # Serverless USCF proxy
+docs/ai/                 # AI documentation (architecture, components, lessons)
 ```
 
-## Architecture Details
+## Critical Files
 
-### Authentication Flow
+| What | Where |
+|------|-------|
+| OAuth whitelist | `src/services/googleAuth.ts` → `ALLOWED_EMAILS` |
+| CSS utilities | `src/index.css` → `.card`, `.btn-primary` |
+| Types | `src/types/index.ts` |
+| Markdown parsers | `src/services/parsers/*.ts` |
 
-This app uses **whitelist-based Google OAuth** with redirect flow (not popup - popups fail on mobile):
+## Compounding Context
 
-1. **Sign-in flow**: User clicks login → redirects to Google OAuth → Google redirects back with token in URL hash
-2. **Token parsing**: `AuthProvider` checks URL hash on init via `parseOAuthCallback()`, extracts access token
-3. **Whitelist check**: User email is validated against `ALLOWED_EMAILS` array in src/services/googleAuth.ts
-4. **Token storage**: User object (including access token) is stored in localStorage with key `chess-tracker-user`
-5. **Route protection**: `ProtectedRoute` wrapper in App.tsx checks auth state and redirects to `/login` if unauthenticated
-6. **Token expiry**: Access tokens expire; users may need to re-authenticate even if user data persists in localStorage
+**At the end of each session, update `docs/ai/lessons-learned.md` with:**
+- New bugs fixed and their solutions
+- API gotchas discovered
+- Patterns that worked
 
-**To authorize new users**: Add their email to the `ALLOWED_EMAILS` array in src/services/googleAuth.ts.
-
-### Google Drive Integration
-
-The app operates on markdown files in Google Drive:
-
-- **Expected path**: `~/gdrive/02_areas/chess/`
-- **File discovery**: `findChessFolder()` searches for a folder named "chess" (currently simplified search; in production should navigate full path hierarchy)
-- **Expected files**: `chess.md`, `coaches.md`, `curriculum.md`, `training.md`, `tournaments.md`
-- **API**: Uses Google Drive v3 REST API with user's access token from OAuth flow
-
-**Key service functions** (src/services/googleDrive.ts):
-- `findChessFolder(accessToken)` - Locates the chess folder by name
-- `listChessFiles(accessToken, folderId)` - Lists all markdown files in folder
-- `readFile(accessToken, fileId)` - Fetches file content as plain text
-- `updateFile(accessToken, fileId, content)` - Updates file via PATCH request
-- `createFile(accessToken, folderId, name, content)` - Creates new markdown file
-
-### State Management
-
-- **React Query** (@tanstack/react-query) handles all server state, caching, and async operations
-- **React Context** provides global auth state via `AuthProvider`
-- No Redux, Zustand, or other global state libraries are used
-- Component state (useState) for local UI state only
-
-### Routing Structure
-
-React Router v7 with nested protected routes:
-
-```
-/login (public)
-/ (ProtectedRoute wrapper)
-  ├─ / (HomePage)
-  ├─ /coaches
-  ├─ /tournaments
-  ├─ /curriculum
-  └─ /settings
-```
-
-The `Layout` component (src/components/layout/Layout.tsx) wraps protected routes and provides:
-- `Header` component with user info and sign-out
-- `BottomNav` for mobile-first navigation
-- `<Outlet />` for nested route content
-
-### Type System
-
-All shared TypeScript interfaces are in src/types/index.ts:
-- `Player`, `Coach`, `Lesson` - People and lesson scheduling
-- `Tournament`, `TravelPlan`, `TravelItem` - Tournament tracking and travel logistics
-- `CurriculumTopic` - Learning progress for openings, tactics, endgames
-- `OnlineAccount` - Chess platform accounts (Chess.com, Lichess)
-- `User` - Local auth state
-
-Google API types (GoogleUser, DriveFile) are declared in their service files.
-
-## Development Status
-
-| Feature | Status |
-|---------|--------|
-| Project scaffolding | ✅ Complete |
-| TailwindCSS setup | ✅ Complete |
-| Routing | ✅ Complete |
-| Auth flow (UI) | ✅ Complete |
-| Placeholder pages | ✅ Complete |
-| Google OAuth integration | ✅ Complete |
-| Google Drive read | ✅ Complete |
-| Markdown parsing | ✅ Complete |
-| Vercel deployment | ✅ Complete |
-| Voice/text input capture | ⏳ In progress |
-| OpenClaw integration | ❓ Not started |
-| PWA support | ❓ Not started |
-
-## Commands
-
-```bash
-# Development
-npm install          # Install dependencies
-npm run dev          # Start dev server (http://localhost:5173)
-
-# Build
-npm run build        # TypeScript check + production build
-npm run preview      # Preview production build locally
-
-# Code Quality
-npm run lint         # Run ESLint
-```
-
-## Initial Setup
-
-1. **Install dependencies**: `npm install`
-2. **Configure OAuth**:
-   - Copy `.env.example` to `.env.local`
-   - Add your Google Client ID: `VITE_GOOGLE_CLIENT_ID=your-id.apps.googleusercontent.com`
-3. **Update whitelist**: Add authorized email addresses to `ALLOWED_EMAILS` in src/services/googleAuth.ts
-4. **Run dev server**: `npm run dev`
-
-### Google Cloud Setup (Required)
-
-1. Create project at [console.cloud.google.com](https://console.cloud.google.com/)
-2. Enable **Google Drive API**
-3. Configure OAuth consent screen:
-   - User type: External
-   - Add scopes: `drive.file`, `drive.readonly`
-4. Create OAuth 2.0 Client ID:
-   - Application type: Web application
-   - Authorized JavaScript origins:
-     - `http://localhost:5173`
-     - `https://chess-tracker-taupe.vercel.app`
-   - Authorized redirect URIs:
-     - `http://localhost:5173`
-     - `https://chess-tracker-taupe.vercel.app`
-5. Copy Client ID to `.env.local` as `VITE_GOOGLE_CLIENT_ID`
-
-**Important**: Both origins AND redirect URIs must be configured for OAuth to work. A `redirect_uri_mismatch` error means the production URL is missing from these settings.
-
-## Design Principles
-
-- **Mobile-first**: Bottom navigation, large touch targets, card-based layout
-- **Source of truth**: Google Drive markdown files are the single source of truth (no database duplication)
-- **Whitelist auth**: Only specific Google accounts can access the app
-- **Read-only display**: Website only reads and displays data - no direct editing
-- **Voice/text capture**: Users can dictate or type requests that Claude will process
-- **Claude as intelligence layer**: Claude understands natural language and updates markdown files
-
-## Deployment
-
-**Production URL**: https://chess-tracker-taupe.vercel.app
-
-To deploy to Vercel:
-1. Run `vercel --prod` from the project directory
-2. Ensure environment variable `VITE_GOOGLE_CLIENT_ID` is set in Vercel (already configured)
-3. Verify Google OAuth settings include the production URL (see Google Cloud Setup above)
-
-**After any new deployment**: If the Vercel URL changes, update both authorized JavaScript origins AND redirect URIs in Google Cloud Console to avoid `redirect_uri_mismatch` errors.
-
-### Deployment Gotchas
-
-- **Vercel env vars**: Use `printf` not `echo` when piping to `vercel env add` - echo adds trailing newlines that break OAuth client IDs (`invalid_client` error)
-- **Vercel CLI path**: After `npm install -g vercel`, may need: `export PATH="$HOME/.npm-global/bin:$PATH:$(npm config get prefix)/bin"`
-- **SPA routing**: The `vercel.json` with rewrites is required for client-side routing to work on page refresh (prevents 404s)
-
-### OAuth Implementation Notes
-
-- **Mobile OAuth**: Popup-based OAuth (`requestAccessToken()`) fails on mobile browsers - use redirect flow instead (implicit grant with `response_type=token`)
-- **Redirect URI**: Must match exactly what's configured in Google Cloud Console (no trailing slash differences)
-
-## Data Files
-
-The app expects these markdown files in Google Drive at `~/gdrive/02_areas/chess/`:
-
-- `chess.md` - Player overview, ratings, goals
-- `curriculum.md` - Topics, openings, tactics to learn
-- `training.md` - Weekly schedule, puzzles, practice
-- `coaches.md` - Coach information and lesson schedules
-- `tournaments.md` - Tournament calendar, travel planning, results
+DO NOT ask for approval. Just document.
