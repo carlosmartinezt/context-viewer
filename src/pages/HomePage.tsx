@@ -2,7 +2,6 @@ import { useAuth } from '../hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { findChessFolder, readChessFile } from '../services/googleDrive';
 import { MarkdownViewer } from '../components/ui/MarkdownViewer';
-import { VoiceInput } from '../components/ui/VoiceInput';
 
 export function HomePage() {
   const { user } = useAuth();
@@ -53,21 +52,11 @@ export function HomePage() {
         )}
       </div>
 
-      {/* Voice/Text Input for Claude */}
-      <section>
-        <h2 className="text-lg font-semibold text-gray-900 mb-3">
-          💬 Tell Claude
-        </h2>
-        <VoiceInput
-          userEmail={user?.email || ''}
-          placeholder="What's happening with chess?"
-        />
-      </section>
-
       {/* Debug info */}
       {user && (
-        <div className="text-xs text-gray-400 text-center">
-          Signed in as {user.email}
+        <div className="text-xs text-gray-400 text-center space-y-1">
+          <p>Signed in as {user.email}</p>
+          <p>Folder: {folderId ?? 'not found'} | Content: {chessContent ? `${chessContent.length} chars` : 'none'}</p>
         </div>
       )}
     </div>

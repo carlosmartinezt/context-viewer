@@ -7,7 +7,8 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(curl:*)",
-      "Bash(/usr/local/Cellar/node/25.5.0/bin/vercel:*)"
+      "Bash(/usr/local/Cellar/node/25.5.0/bin/vercel:*)",
+      "Bash(npx vercel:*)"
     ]
   }
 }

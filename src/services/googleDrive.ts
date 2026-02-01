@@ -2,6 +2,23 @@
 // Reads markdown files from the chess folder - NO PARSING, just raw content
 
 const DRIVE_API_BASE = 'https://www.googleapis.com/drive/v3';
+const STORAGE_KEY = 'chess-tracker-user';
+
+// Wrapper that handles expired tokens
+async function driveApiFetch(url: string, accessToken: string): Promise<Response> {
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  if (response.status === 401) {
+    // Token expired - clear storage and reload to trigger login
+    localStorage.removeItem(STORAGE_KEY);
+    window.location.reload();
+    throw new Error('Session expired. Please sign in again.');
+  }
+
+  return response;
+}
 const CHESS_FOLDER_NAME = 'chess';
 
 export interface DriveFile {
@@ -26,13 +43,9 @@ export type ChessFileName = typeof CHESS_FILES[number];
 export async function findChessFolder(accessToken: string): Promise<string | null> {
   const query = `name = '${CHESS_FOLDER_NAME}' and mimeType = 'application/vnd.google-apps.folder'`;
 
-  const response = await fetch(
+  const response = await driveApiFetch(
     `${DRIVE_API_BASE}/files?q=${encodeURIComponent(query)}&fields=files(id,name)`,
-    {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    }
+    accessToken
   );
 
   const data = await response.json();
@@ -52,13 +65,9 @@ export async function listChessFiles(
   // Note: Google Drive may store .md files as text/plain, not text/markdown
   const query = `'${folderId}' in parents and name contains '.md' and trashed = false`;
 
-  const response = await fetch(
+  const response = await driveApiFetch(
     `${DRIVE_API_BASE}/files?q=${encodeURIComponent(query)}&fields=files(id,name,mimeType,modifiedTime)`,
-    {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    }
+    accessToken
   );
 
   const data = await response.json();
@@ -70,13 +79,9 @@ export async function readFile(
   accessToken: string,
   fileId: string
 ): Promise<string> {
-  const response = await fetch(
+  const response = await driveApiFetch(
     `${DRIVE_API_BASE}/files/${fileId}?alt=media`,
-    {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    }
+    accessToken
   );
 
   return response.text();

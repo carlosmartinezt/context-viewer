@@ -132,7 +132,7 @@ export function VoiceInput({ userEmail, placeholder = "What's happening with che
           <button
             onClick={handleCallClaude}
             disabled={!text.trim() || status === 'calling'}
-            className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
           >
             {status === 'calling' ? (
               <>

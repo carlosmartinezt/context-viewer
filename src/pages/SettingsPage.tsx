@@ -1,7 +1,18 @@
 import { useAuth } from '../hooks/useAuth';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function SettingsPage() {
   const { user, signOut } = useAuth();
+  const queryClient = useQueryClient();
+
+  const handleForceRefresh = () => {
+    queryClient.invalidateQueries();
+  };
+
+  const handleForceRelogin = () => {
+    localStorage.removeItem('chess-tracker-user');
+    window.location.reload();
+  };
 
   return (
     <div className="py-4 space-y-6">
@@ -72,13 +83,30 @@ export function SettingsPage() {
         </div>
       </section>
 
-      {/* Sign Out */}
-      <button
-        onClick={signOut}
-        className="w-full py-3 text-red-600 font-medium border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
-      >
-        Sign Out
-      </button>
+      {/* Actions */}
+      <section>
+        <h3 className="text-md font-medium text-gray-900 mb-2">Actions</h3>
+        <div className="space-y-2">
+          <button
+            onClick={handleForceRefresh}
+            className="w-full py-3 text-blue-600 font-medium border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors"
+          >
+            Refresh Data
+          </button>
+          <button
+            onClick={handleForceRelogin}
+            className="w-full py-3 text-amber-600 font-medium border border-amber-200 rounded-lg hover:bg-amber-50 transition-colors"
+          >
+            Force Re-login
+          </button>
+          <button
+            onClick={signOut}
+            className="w-full py-3 text-red-600 font-medium border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+          >
+            Sign Out
+          </button>
+        </div>
+      </section>
 
       {/* Version */}
       <div className="text-center text-xs text-gray-400">
