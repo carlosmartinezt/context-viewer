@@ -79,7 +79,7 @@ export function FolderPage() {
             files={contents?.files.filter(f => f.id !== fileToRead?.id) || []}
           />
           <div className="card">
-            <MarkdownViewer content={fileContent} files={contents?.files || []} />
+            <MarkdownViewer content={fileContent} files={contents?.files || []} folders={contents?.folders || []} />
           </div>
         </div>
       ) : (

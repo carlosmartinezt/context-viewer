@@ -81,7 +81,7 @@ export function FilePage() {
             <div className="h-4 bg-[var(--color-bg-subtle)] rounded w-2/3"></div>
           </div>
         ) : content ? (
-          <MarkdownViewer content={content} files={siblings?.files || []} />
+          <MarkdownViewer content={content} files={siblings?.files || []} folders={siblings?.folders || []} />
         ) : (
           <p className="text-[var(--color-text-secondary)]">No content found</p>
         )}

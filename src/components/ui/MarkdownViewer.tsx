@@ -2,7 +2,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Link } from 'react-router-dom';
 
-interface FileInfo {
+interface ItemInfo {
   id: string;
   name: string;
 }
@@ -10,11 +10,12 @@ interface FileInfo {
 interface MarkdownViewerProps {
   content: string;
   className?: string;
-  files?: FileInfo[];
+  files?: ItemInfo[];
+  folders?: ItemInfo[];
 }
 
-export function MarkdownViewer({ content, className = '', files = [] }: MarkdownViewerProps) {
-  // Helper to resolve relative .md links to file IDs
+export function MarkdownViewer({ content, className = '', files = [], folders = [] }: MarkdownViewerProps) {
+  // Helper to resolve relative .md links to file IDs or folder IDs
   const resolveLink = (href: string | undefined): { type: 'internal' | 'external'; to: string } | null => {
     if (!href) return null;
 
@@ -23,8 +24,19 @@ export function MarkdownViewer({ content, className = '', files = [] }: Markdown
       return { type: 'external', to: href };
     }
 
-    // Relative .md links - try to find in files array
-    const cleanHref = href.replace(/^\.\//, ''); // Remove leading ./
+    // Clean the href: remove leading ./ and trailing /
+    const cleanHref = href.replace(/^\.\//, '').replace(/\/$/, '');
+
+    // First check for matching folder
+    const matchingFolder = folders.find(f =>
+      f.name.toLowerCase() === cleanHref.toLowerCase()
+    );
+
+    if (matchingFolder) {
+      return { type: 'internal', to: `/folder/${matchingFolder.id}` };
+    }
+
+    // Then check for matching file
     const matchingFile = files.find(f =>
       f.name.toLowerCase() === cleanHref.toLowerCase() ||
       f.name.toLowerCase() === cleanHref.toLowerCase() + '.md'
