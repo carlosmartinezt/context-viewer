@@ -27,19 +27,27 @@ export function MarkdownViewer({ content, className = '', files = [], folders = 
     // Clean the href: remove leading ./ and trailing /
     const cleanHref = href.replace(/^\.\//, '').replace(/\/$/, '');
 
-    // First check for matching folder
+    // For paths like "01_projects/run_nyc_marathon", extract the last segment
+    const lastSegment = cleanHref.includes('/')
+      ? cleanHref.split('/').pop() || cleanHref
+      : cleanHref;
+
+    // First check for matching folder (try full path, then last segment)
     const matchingFolder = folders.find(f =>
-      f.name.toLowerCase() === cleanHref.toLowerCase()
+      f.name.toLowerCase() === cleanHref.toLowerCase() ||
+      f.name.toLowerCase() === lastSegment.toLowerCase()
     );
 
     if (matchingFolder) {
       return { type: 'internal', to: `/folder/${matchingFolder.id}` };
     }
 
-    // Then check for matching file
+    // Then check for matching file (try full path, then last segment)
     const matchingFile = files.find(f =>
       f.name.toLowerCase() === cleanHref.toLowerCase() ||
-      f.name.toLowerCase() === cleanHref.toLowerCase() + '.md'
+      f.name.toLowerCase() === cleanHref.toLowerCase() + '.md' ||
+      f.name.toLowerCase() === lastSegment.toLowerCase() ||
+      f.name.toLowerCase() === lastSegment.toLowerCase() + '.md'
     );
 
     if (matchingFile) {
