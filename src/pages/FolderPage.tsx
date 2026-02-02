@@ -72,7 +72,7 @@ export function FolderPage() {
           <div className="h-4 bg-[var(--color-bg-subtle)] rounded w-1/2"></div>
           <div className="h-4 bg-[var(--color-bg-subtle)] rounded w-3/4"></div>
         </div>
-      ) : isSingleFile && fileContent ? (
+      ) : fileToRead && fileContent ? (
         <div className="space-y-4">
           <FolderNav
             folders={contents?.folders || []}
@@ -84,11 +84,6 @@ export function FolderPage() {
         </div>
       ) : (
         <>
-          {fileContent && indexFile && (
-            <div className="card">
-              <MarkdownViewer content={fileContent} files={contents?.files || []} />
-            </div>
-          )}
 
           {contents?.folders && contents.folders.length > 0 && (
             <section>
