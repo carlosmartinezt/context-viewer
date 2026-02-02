@@ -10,7 +10,7 @@
 
 **Key Principle**: Website is READ-ONLY. Renders markdown files directly from Google Drive with no parsing.
 
-**Production**: https://context-viewer-c7ptacucd-carlos-martinezs-projects-edf1fd40.vercel.app (also: chess-tracker-taupe.vercel.app)
+**Production**: https://context-viewer.vercel.app
 
 ## Commands
 
