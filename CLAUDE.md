@@ -1,16 +1,16 @@
 # CLAUDE.md
 
+## IMPORTANT: Compound Context
+
+**After every conversation, update this file with any new learnings, changes, or context.** This is critical for maintaining continuity across sessions. Document architectural decisions, new patterns, gotchas discovered, and any changes to the codebase structure.
+
 ## Quick Context
 
-**Chess Tracker** - Mobile-first read-only dashboard for kids' chess training. Renders markdown files from Google Drive as-is using react-markdown.
+**Context Viewer** - Mobile-first Google Drive markdown file browser. Renders markdown files as-is using react-markdown with dynamic folder-based navigation.
 
-**Key Principle**: Website is READ-ONLY. Claude modifies markdown files directly. NO parsing - files render as-is with any structure.
+**Key Principle**: Website is READ-ONLY. Renders markdown files directly from Google Drive with no parsing.
 
-**Production**: https://chess-tracker-taupe.vercel.app
-
-## Before You Start
-
-Read [docs/application-design.md](docs/application-design.md) for full architecture.
+**Production**: https://context-viewer-c7ptacucd-carlos-martinezs-projects-edf1fd40.vercel.app (also: chess-tracker-taupe.vercel.app)
 
 ## Commands
 
@@ -31,64 +31,50 @@ React 19 + TypeScript + Vite + TailwindCSS v4 + React Query + React Router v7
 
 ```
 src/
-├── components/layout/   # Header, BottomNav, Layout
-├── components/ui/       # VoiceInput, MarkdownViewer
-├── pages/               # HomePage, CoachesPage, MorePage, FilePage, etc.
-├── services/            # googleAuth, googleDrive, claudeServer
+├── components/layout/   # Header, BottomNav, Sidebar, Layout
+├── components/ui/       # MarkdownViewer
+├── pages/               # HomePage, FolderPage, FilePage, MorePage, SettingsPage, LoginPage
+├── services/            # googleAuth, googleDrive
 ├── hooks/               # useAuth
-├── types/               # User type only (no data types - no parsing)
+├── types/               # User type only
 docs/                    # Application design docs
 ```
 
-## Critical Files
+## How It Works
+
+1. User logs in with Google OAuth
+2. User selects a root folder from Google Drive (in Settings)
+3. App shows subfolders in bottom navigation (first 4 folders)
+4. Clicking a folder shows its contents (subfolders + markdown files)
+5. Clicking a file renders it with MarkdownViewer
+
+## Routing
+
+| Route | Description |
+|-------|-------------|
+| `/` | Home - shows root folder contents |
+| `/folder/:folderId` | Shows folder contents |
+| `/file/:fileId` | Renders markdown file |
+| `/more` | Lists all folders + settings link |
+| `/settings` | Root folder picker, account, sign out |
+
+## Key Files
 
 | What | Where |
 |------|-------|
 | OAuth whitelist | `src/services/googleAuth.ts` → `ALLOWED_EMAILS` |
-| CSS utilities | `src/index.css` → `.card`, `.btn-primary` |
-| File routes | `src/components/ui/MarkdownViewer.tsx` → `FILE_ROUTES` |
-| Nav items | `src/components/layout/BottomNav.tsx` → `navItems` |
+| Root folder storage | `localStorage` → `context-viewer-root-folder` |
+| Folder picker | `src/pages/SettingsPage.tsx` → Google Picker API |
+| Dynamic nav | `src/components/layout/BottomNav.tsx` |
 
-## Routing
+## Storage Keys
 
-| Route | File | Description |
-|-------|------|-------------|
-| `/` | chess.md | Home/overview |
-| `/coaches` | coaches.md | Coach info |
-| `/tournaments` | tournaments.md | Tournament calendar |
-| `/curriculum` | curriculum.md | Learning progress |
-| `/more` | - | Lists additional files + settings |
-| `/file/:name` | [name].md | Dynamic route for any markdown file |
-
-Internal `.md` links in markdown are handled by MarkdownViewer and navigate within the app.
+- `context-viewer-user` - Google user info + access token
+- `context-viewer-root-folder` - Selected root folder ID
+- `context-viewer-root-folder-name` - Selected root folder name
 
 ## Token Handling
 
 - Google access tokens expire after ~1 hour
 - `driveApiFetch()` in googleDrive.ts detects 401s and auto-clears localStorage + reloads
 - Settings page has "Force Re-login" button for manual refresh
-- After VoiceInput gets Claude response, `queryClient.invalidateQueries()` refreshes all data
-
-## Claude Server (Mac)
-
-**Location:** `~/Workspace/chess-claude-server/`
-
-Express server that receives requests from the website and runs Claude CLI with access to Google Drive files.
-
-- Port: 3847 (Tailscale IP: 100.123.49.56)
-- Auto-starts via LaunchAgent: `~/Library/LaunchAgents/com.chess.claude-server.plist`
-- Logs: `~/Workspace/chess-claude-server/server.log`
-
-```bash
-# Check status
-launchctl list | grep chess
-
-# Stop/start
-launchctl unload ~/Library/LaunchAgents/com.chess.claude-server.plist
-launchctl load ~/Library/LaunchAgents/com.chess.claude-server.plist
-```
-
-**Gotchas when spawning Claude CLI from Node.js:**
-- Redirect stdin: `< /dev/null` - prevents hanging
-- Use `--dangerously-skip-permissions` - avoids permission prompts
-- Use `exec()` not `spawn()` with `shell: true` - better escaping

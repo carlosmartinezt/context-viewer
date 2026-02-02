@@ -1,21 +1,22 @@
-# Chess Tracker
+# Context Viewer
 
-A mobile-first web app for tracking kids' chess training, coaches, and tournaments.
+A mobile-first web app for browsing and viewing markdown files from Google Drive.
 
 ## Features
 
-- **Player Dashboard**: View ratings and upcoming events
-- **Coach Management**: Track lessons with multiple coaches
-- **Tournament Calendar**: Local weekends + travel tournaments with hotel reminders
-- **Curriculum Tracking**: Openings, tactics, endgames progress
-- **Google Drive Integration**: Reads/writes to markdown files in Drive
+- **Folder Browser**: Navigate any Google Drive folder structure
+- **Dynamic Navigation**: Bottom nav shows first 4 subfolders automatically
+- **Markdown Viewer**: Renders markdown files with tables, code, lists
+- **Index Files**: Auto-displays index.md or readme.md in folders
+- **Root Folder Picker**: Select any folder as your root via Google Picker
 
 ## Tech Stack
 
-- React + TypeScript + Vite
-- TailwindCSS (mobile-first design)
+- React 19 + TypeScript + Vite
+- TailwindCSS v4 (mobile-first design)
 - Google OAuth 2.0 (whitelist-based auth)
-- Google Drive API
+- Google Drive API v3
+- Google Picker API
 
 ## Setup
 
@@ -29,10 +30,10 @@ npm install
 
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
 2. Create a new project (or select existing)
-3. Enable the **Google Drive API**
+3. Enable the **Google Drive API** and **Google Picker API**
 4. Configure **OAuth consent screen**:
    - User type: External
-   - Add scopes: `drive.file`, `drive.readonly`
+   - Add scopes: `drive.readonly`
 5. Create **OAuth 2.0 Client ID**:
    - Application type: Web application
    - Authorized origins: `http://localhost:5173`
@@ -74,17 +75,17 @@ Open http://localhost:5173
 ```
 src/
 ├── components/
-│   └── layout/       # Header, BottomNav, Layout
+│   ├── layout/       # Header, BottomNav, Layout
+│   └── ui/           # MarkdownViewer, VoiceInput
 ├── hooks/            # useAuth
-├── pages/            # HomePage, CoachesPage, etc.
+├── pages/            # HomePage, FolderPage, FilePage, etc.
 ├── services/         # googleAuth, googleDrive
-├── types/            # TypeScript interfaces
-└── utils/            # Helper functions
+└── types/            # TypeScript interfaces
 ```
 
-## Data Source
+## Usage
 
-The app reads markdown files from Google Drive:
-- `~/gdrive/02_areas/chess/`
-
-Files: `chess.md`, `coaches.md`, `curriculum.md`, `training.md`, `tournaments.md`
+1. Sign in with Google
+2. Go to Settings and select a root folder from your Drive
+3. Browse folders using the bottom navigation
+4. Tap any markdown file to view it

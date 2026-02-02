@@ -3,9 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { Layout } from './components/layout/Layout';
 import { HomePage } from './pages/HomePage';
-import { CoachesPage } from './pages/CoachesPage';
-import { TournamentsPage } from './pages/TournamentsPage';
-import { CurriculumPage } from './pages/CurriculumPage';
+import { FolderPage } from './pages/FolderPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { MorePage } from './pages/MorePage';
 import { FilePage } from './pages/FilePage';
@@ -21,7 +19,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="text-4xl mb-4">♟️</div>
+          <div className="text-4xl mb-4">📄</div>
           <div className="text-gray-500">Loading...</div>
         </div>
       </div>
@@ -53,12 +51,10 @@ function AppRoutes() {
         }
       >
         <Route index element={<HomePage />} />
-        <Route path="coaches" element={<CoachesPage />} />
-        <Route path="tournaments" element={<TournamentsPage />} />
-        <Route path="curriculum" element={<CurriculumPage />} />
+        <Route path="folder/:folderId" element={<FolderPage />} />
+        <Route path="file/:fileId" element={<FilePage />} />
         <Route path="more" element={<MorePage />} />
         <Route path="settings" element={<SettingsPage />} />
-        <Route path="file/:filename" element={<FilePage />} />
       </Route>
     </Routes>
   );

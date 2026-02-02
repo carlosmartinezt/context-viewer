@@ -1,8 +1,9 @@
 // Google Drive API service
-// Reads markdown files from the chess folder - NO PARSING, just raw content
+// Generic folder/file browser - NO PARSING, just raw content
 
 const DRIVE_API_BASE = 'https://www.googleapis.com/drive/v3';
-const STORAGE_KEY = 'chess-tracker-user';
+const STORAGE_KEY = 'context-viewer-user';
+const ROOT_FOLDER_KEY = 'context-viewer-root-folder';
 
 // Wrapper that handles expired tokens
 async function driveApiFetch(url: string, accessToken: string): Promise<Response> {
@@ -19,7 +20,6 @@ async function driveApiFetch(url: string, accessToken: string): Promise<Response
 
   return response;
 }
-const CHESS_FOLDER_NAME = 'chess';
 
 export interface DriveFile {
   id: string;
@@ -28,7 +28,124 @@ export interface DriveFile {
   modifiedTime: string;
 }
 
-// Chess file names
+export interface DriveFolder {
+  id: string;
+  name: string;
+}
+
+// Get/set the selected root folder
+export function getRootFolderId(): string | null {
+  return localStorage.getItem(ROOT_FOLDER_KEY);
+}
+
+export function setRootFolderId(folderId: string, folderName: string): void {
+  localStorage.setItem(ROOT_FOLDER_KEY, folderId);
+  localStorage.setItem(ROOT_FOLDER_KEY + '-name', folderName);
+}
+
+export function getRootFolderName(): string | null {
+  return localStorage.getItem(ROOT_FOLDER_KEY + '-name');
+}
+
+export function clearRootFolder(): void {
+  localStorage.removeItem(ROOT_FOLDER_KEY);
+  localStorage.removeItem(ROOT_FOLDER_KEY + '-name');
+}
+
+// List subfolders in a folder
+export async function listFolders(
+  accessToken: string,
+  parentFolderId: string
+): Promise<DriveFolder[]> {
+  const query = `'${parentFolderId}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`;
+
+  const response = await driveApiFetch(
+    `${DRIVE_API_BASE}/files?q=${encodeURIComponent(query)}&fields=files(id,name)&orderBy=name`,
+    accessToken
+  );
+
+  const data = await response.json();
+  const folders = data.files || [];
+  // Hide folders starting with a dot (e.g., .claude)
+  return folders.filter((f: DriveFolder) => !f.name.startsWith('.'));
+}
+
+// List markdown files in a folder
+export async function listMarkdownFiles(
+  accessToken: string,
+  folderId: string
+): Promise<DriveFile[]> {
+  const query = `'${folderId}' in parents and name contains '.md' and trashed = false`;
+
+  const response = await driveApiFetch(
+    `${DRIVE_API_BASE}/files?q=${encodeURIComponent(query)}&fields=files(id,name,mimeType,modifiedTime)&orderBy=name`,
+    accessToken
+  );
+
+  const data = await response.json();
+  return data.files || [];
+}
+
+// List all items (folders + files) in a folder
+export async function listFolderContents(
+  accessToken: string,
+  folderId: string
+): Promise<{ folders: DriveFolder[]; files: DriveFile[] }> {
+  const [folders, files] = await Promise.all([
+    listFolders(accessToken, folderId),
+    listMarkdownFiles(accessToken, folderId),
+  ]);
+
+  return { folders, files };
+}
+
+// Read a file's raw content
+export async function readFile(
+  accessToken: string,
+  fileId: string
+): Promise<string> {
+  const response = await driveApiFetch(
+    `${DRIVE_API_BASE}/files/${fileId}?alt=media`,
+    accessToken
+  );
+
+  return response.text();
+}
+
+// Read a file by name from a folder
+export async function readFileByName(
+  accessToken: string,
+  folderId: string,
+  fileName: string
+): Promise<string> {
+  const files = await listMarkdownFiles(accessToken, folderId);
+  const file = files.find((f) => f.name === fileName);
+
+  if (!file) {
+    throw new Error(`${fileName} not found`);
+  }
+
+  return readFile(accessToken, file.id);
+}
+
+// Get folder metadata
+export async function getFolder(
+  accessToken: string,
+  folderId: string
+): Promise<DriveFolder> {
+  const response = await driveApiFetch(
+    `${DRIVE_API_BASE}/files/${folderId}?fields=id,name`,
+    accessToken
+  );
+
+  return response.json();
+}
+
+// ========== LEGACY COMPATIBILITY (will be removed) ==========
+// These are kept temporarily to avoid breaking existing code during migration
+
+const CHESS_FOLDER_NAME = 'chess';
+
 export const CHESS_FILES = [
   'chess.md',
   'coaches.md',
@@ -39,7 +156,6 @@ export const CHESS_FILES = [
 
 export type ChessFileName = typeof CHESS_FILES[number];
 
-// Find the chess folder
 export async function findChessFolder(accessToken: string): Promise<string | null> {
   const query = `name = '${CHESS_FOLDER_NAME}' and mimeType = 'application/vnd.google-apps.folder'`;
 
@@ -57,69 +173,17 @@ export async function findChessFolder(accessToken: string): Promise<string | nul
   return null;
 }
 
-// List all markdown files in the chess folder
 export async function listChessFiles(
   accessToken: string,
   folderId: string
 ): Promise<DriveFile[]> {
-  // Note: Google Drive may store .md files as text/plain, not text/markdown
-  const query = `'${folderId}' in parents and name contains '.md' and trashed = false`;
-
-  const response = await driveApiFetch(
-    `${DRIVE_API_BASE}/files?q=${encodeURIComponent(query)}&fields=files(id,name,mimeType,modifiedTime)`,
-    accessToken
-  );
-
-  const data = await response.json();
-  return data.files || [];
+  return listMarkdownFiles(accessToken, folderId);
 }
 
-// Read a file's raw content
-export async function readFile(
-  accessToken: string,
-  fileId: string
-): Promise<string> {
-  const response = await driveApiFetch(
-    `${DRIVE_API_BASE}/files/${fileId}?alt=media`,
-    accessToken
-  );
-
-  return response.text();
-}
-
-// Read a specific chess file by name
 export async function readChessFile(
   accessToken: string,
   folderId: string,
   fileName: ChessFileName
 ): Promise<string> {
-  const files = await listChessFiles(accessToken, folderId);
-  const file = files.find((f) => f.name === fileName);
-
-  if (!file) {
-    throw new Error(`${fileName} not found`);
-  }
-
-  return readFile(accessToken, file.id);
-}
-
-// Read all chess files at once
-export async function readAllChessFiles(
-  accessToken: string,
-  folderId: string
-): Promise<Record<ChessFileName, string>> {
-  const files = await listChessFiles(accessToken, folderId);
-
-  const result: Partial<Record<ChessFileName, string>> = {};
-
-  await Promise.all(
-    CHESS_FILES.map(async (fileName) => {
-      const file = files.find((f) => f.name === fileName);
-      if (file) {
-        result[fileName] = await readFile(accessToken, file.id);
-      }
-    })
-  );
-
-  return result as Record<ChessFileName, string>;
+  return readFileByName(accessToken, folderId, fileName);
 }

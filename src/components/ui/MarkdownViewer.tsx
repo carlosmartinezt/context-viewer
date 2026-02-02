@@ -1,37 +1,12 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { useNavigate } from 'react-router-dom';
 
 interface MarkdownViewerProps {
   content: string;
   className?: string;
 }
 
-// Map known markdown files to routes
-const FILE_ROUTES: Record<string, string> = {
-  'chess.md': '/',
-  'coaches.md': '/coaches',
-  'tournaments.md': '/tournaments',
-  'curriculum.md': '/curriculum',
-  'training.md': '/file/training',
-};
-
 export function MarkdownViewer({ content, className = '' }: MarkdownViewerProps) {
-  const navigate = useNavigate();
-
-  // Handle link clicks - internal .md links navigate, external open in new tab
-  const handleLinkClick = (href: string | undefined, e: React.MouseEvent) => {
-    if (!href) return;
-
-    // Check if it's an internal .md file link
-    if (href.endsWith('.md') && !href.startsWith('http')) {
-      e.preventDefault();
-      const fileName = href.split('/').pop() || href;
-      const route = FILE_ROUTES[fileName] || `/file/${fileName.replace('.md', '')}`;
-      navigate(route);
-    }
-  };
-
   return (
     <div className={`prose prose-sm max-w-none ${className}`}>
       <ReactMarkdown
@@ -44,28 +19,26 @@ export function MarkdownViewer({ content, className = '' }: MarkdownViewerProps)
             </div>
           ),
           th: ({ children }) => (
-            <th className="px-2 py-1 text-left font-semibold bg-gray-50 border-b">
+            <th className="px-3 py-2 text-left font-semibold bg-[var(--color-bg-subtle)] border-b border-[var(--color-border)] text-[var(--color-text)]">
               {children}
             </th>
           ),
           td: ({ children }) => (
-            <td className="px-2 py-1 border-b">{children}</td>
+            <td className="px-3 py-2 border-b border-[var(--color-border-subtle)] text-[var(--color-text-secondary)]">
+              {children}
+            </td>
           ),
-          // Style links - handle internal .md links
-          a: ({ href, children }) => {
-            const isInternal = href?.endsWith('.md') && !href?.startsWith('http');
-            return (
-              <a
-                href={href}
-                onClick={(e) => handleLinkClick(href, e)}
-                target={isInternal ? undefined : '_blank'}
-                rel={isInternal ? undefined : 'noopener noreferrer'}
-                className="text-blue-600 hover:underline cursor-pointer"
-              >
-                {children}
-              </a>
-            );
-          },
+          // Style links
+          a: ({ href, children }) => (
+            <a
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[var(--color-accent)] hover:underline cursor-pointer"
+            >
+              {children}
+            </a>
+          ),
           // Style checkboxes
           input: ({ type, checked }) => {
             if (type === 'checkbox') {
@@ -74,7 +47,7 @@ export function MarkdownViewer({ content, className = '' }: MarkdownViewerProps)
                   type="checkbox"
                   checked={checked}
                   readOnly
-                  className="mr-2"
+                  className="mr-2 accent-[var(--color-accent)]"
                 />
               );
             }
@@ -82,41 +55,72 @@ export function MarkdownViewer({ content, className = '' }: MarkdownViewerProps)
           },
           // Style headings
           h1: ({ children }) => (
-            <h1 className="text-xl font-bold text-gray-900 mt-4 mb-2">
+            <h1
+              className="text-2xl font-semibold text-[var(--color-text)] mt-6 mb-3"
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
               {children}
             </h1>
           ),
           h2: ({ children }) => (
-            <h2 className="text-lg font-semibold text-gray-900 mt-4 mb-2 border-b pb-1">
+            <h2
+              className="text-xl font-semibold text-[var(--color-text)] mt-6 mb-2 pb-2 border-b border-[var(--color-border-subtle)]"
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
               {children}
             </h2>
           ),
           h3: ({ children }) => (
-            <h3 className="text-base font-semibold text-gray-800 mt-3 mb-1">
+            <h3
+              className="text-lg font-semibold text-[var(--color-text)] mt-5 mb-2"
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
               {children}
             </h3>
           ),
+          // Paragraphs
+          p: ({ children }) => (
+            <p className="text-[var(--color-text-secondary)] my-3 leading-relaxed">
+              {children}
+            </p>
+          ),
           // Style blockquotes
           blockquote: ({ children }) => (
-            <blockquote className="border-l-4 border-blue-300 pl-3 italic text-gray-600 my-2">
+            <blockquote className="border-l-3 border-[var(--color-accent)] pl-4 italic text-[var(--color-text-secondary)] my-4 bg-[var(--color-bg-subtle)] py-2 pr-4 rounded-r-lg">
               {children}
             </blockquote>
           ),
           // Style lists
           ul: ({ children }) => (
-            <ul className="list-disc list-inside space-y-1 my-2">{children}</ul>
+            <ul className="list-disc list-outside ml-5 space-y-1.5 my-3 text-[var(--color-text-secondary)]">
+              {children}
+            </ul>
           ),
           ol: ({ children }) => (
-            <ol className="list-decimal list-inside space-y-1 my-2">{children}</ol>
+            <ol className="list-decimal list-outside ml-5 space-y-1.5 my-3 text-[var(--color-text-secondary)]">
+              {children}
+            </ol>
+          ),
+          li: ({ children }) => (
+            <li className="leading-relaxed">{children}</li>
           ),
           // Style code
           code: ({ children }) => (
-            <code className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono">
+            <code className="bg-[var(--color-bg-subtle)] px-1.5 py-0.5 rounded text-sm font-mono text-[var(--color-text)]">
               {children}
             </code>
           ),
+          pre: ({ children }) => (
+            <pre className="bg-[var(--color-bg-subtle)] p-4 rounded-lg overflow-x-auto my-4 text-sm">
+              {children}
+            </pre>
+          ),
           // Horizontal rules
-          hr: () => <hr className="my-4 border-gray-200" />,
+          hr: () => <hr className="my-6 border-[var(--color-border-subtle)]" />,
+          // Strong/bold
+          strong: ({ children }) => (
+            <strong className="font-semibold text-[var(--color-text)]">{children}</strong>
+          ),
         }}
       >
         {content}

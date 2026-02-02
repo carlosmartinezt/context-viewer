@@ -21,7 +21,8 @@
       "Bash('/Users/carlos/.local/bin/claude' -p 'Say hello' --model haiku)",
       "Bash(time '/Users/carlos/.local/bin/claude' -p 'You are helping manage chess training for two kids \\(Rapha and Rory\\).\nThe user''''s request is: \"\"What lessons are scheduled?\"\"\n\nYou have access to chess files in the current directory:\n- chess.md - Player overview, ratings, goals\n- coaches.md - Coach info and lesson schedules\n- tournaments.md - Tournament calendar\n- curriculum.md - Learning topics\n- training.md - Weekly practice schedule\n\nRead the relevant files, understand the request, and take action. Be concise in your response.' --model haiku)",
       "Bash(npm root:*)",
-      "Bash(launchctl list:*)"
+      "Bash(launchctl list:*)",
+      "Bash(npm run lint:*)"
     ]
   }
 }

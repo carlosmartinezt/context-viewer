@@ -9,10 +9,8 @@ export function LoginPage() {
   const [processingCallback, setProcessingCallback] = useState(false);
   const navigate = useNavigate();
 
-  // Check for OAuth callback on mount
   useEffect(() => {
     async function checkCallback() {
-      // Check if URL has OAuth response in hash
       if (window.location.hash.includes('access_token')) {
         setProcessingCallback(true);
         const success = await handleOAuthCallback();
@@ -25,7 +23,6 @@ export function LoginPage() {
     checkCallback();
   }, [handleOAuthCallback, navigate]);
 
-  // Redirect if already logged in
   useEffect(() => {
     if (user && !processingCallback) {
       navigate('/', { replace: true });
@@ -45,26 +42,35 @@ export function LoginPage() {
   const isProcessing = loading || processingCallback;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-      <div className="text-center mb-8">
-        <div className="text-6xl mb-4">♟️</div>
-        <h1 className="text-2xl font-bold text-gray-900">Chess Tracker</h1>
-        <p className="text-gray-500 mt-2">
-          Track training, coaches & tournaments
+    <div className="min-h-screen bg-[var(--color-bg)] flex flex-col items-center justify-center p-6">
+      <div className="text-center mb-10">
+        <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-[var(--color-accent)] flex items-center justify-center">
+          <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </div>
+        <h1
+          className="text-3xl font-semibold text-[var(--color-text)] tracking-tight"
+          style={{ fontFamily: 'var(--font-display)' }}
+        >
+          Context Viewer
+        </h1>
+        <p className="text-[var(--color-text-secondary)] mt-2 text-lg">
+          Browse your markdown files
         </p>
       </div>
 
       <div className="w-full max-w-sm">
         {!isConfigured ? (
-          <div className="card bg-amber-50 border-amber-200">
-            <h3 className="font-medium text-amber-800 mb-2">Setup Required</h3>
-            <p className="text-sm text-amber-700">
+          <div className="card border-l-4 border-l-amber-400">
+            <h3 className="font-medium text-[var(--color-text)] mb-2">Setup Required</h3>
+            <p className="text-sm text-[var(--color-text-secondary)]">
               Google OAuth is not configured. Add your Client ID to{' '}
-              <code className="bg-amber-100 px-1 rounded">
+              <code className="bg-[var(--color-bg-subtle)] px-1 rounded text-sm">
                 .env.local
               </code>
             </p>
-            <pre className="mt-2 text-xs bg-amber-100 p-2 rounded overflow-x-auto">
+            <pre className="mt-3 text-xs bg-[var(--color-bg-subtle)] p-3 rounded-lg overflow-x-auto text-[var(--color-text-secondary)]">
               VITE_GOOGLE_CLIENT_ID=your-client-id
             </pre>
           </div>
@@ -73,10 +79,10 @@ export function LoginPage() {
             <button
               onClick={handleSignIn}
               disabled={isProcessing}
-              className="w-full bg-white border border-gray-300 rounded-lg py-3 px-4 flex items-center justify-center gap-3 font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-colors disabled:opacity-50"
+              className="w-full bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-xl py-4 px-5 flex items-center justify-center gap-3 font-medium text-[var(--color-text)] hover:border-[var(--color-text-tertiary)] hover:shadow-md transition-all disabled:opacity-50"
             >
               {isProcessing ? (
-                <span>Signing in...</span>
+                <span className="text-[var(--color-text-secondary)]">Signing in...</span>
               ) : (
                 <>
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -103,13 +109,13 @@ export function LoginPage() {
             </button>
 
             {(error || localError) && (
-              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
                 <p className="text-sm text-red-700">{error || localError}</p>
               </div>
             )}
 
-            <p className="text-xs text-gray-400 text-center mt-4">
-              Only authorized family members can access this app
+            <p className="text-sm text-[var(--color-text-tertiary)] text-center mt-6">
+              Sign in to access your Drive files
             </p>
           </>
         )}

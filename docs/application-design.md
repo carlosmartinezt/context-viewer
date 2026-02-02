@@ -1,10 +1,10 @@
-# Chess Tracker - Application Design
+# Context Viewer - Application Design
 
 ## Core Philosophy
 
-**Markdown files in Google Drive are the single source of truth.** The website renders these files as-is using react-markdown. Claude is the intelligence layer that handles all queries and updates via natural language.
+**Browse and render markdown files from any Google Drive folder.** The app is a read-only viewer that renders markdown files using react-markdown with dynamic folder-based navigation.
 
-**Key Principle:** No parsing of markdown structure. Files can have any format - Claude adapts, the website just renders.
+**Key Principle:** No parsing of markdown structure. Files render as-is - the app just navigates and displays.
 
 ## Architecture Overview
 
@@ -12,78 +12,46 @@
 ┌─────────────────────────────────────────────────────────────────────┐
 │                         DATA LAYER                                   │
 │                                                                      │
-│   Google Drive (~/gdrive/02_areas/chess/)                           │
-│   ├── chess.md        (player profiles, ratings, goals)             │
-│   ├── coaches.md      (coach info, contact, rates)                  │
-│   ├── training.md     (weekly schedule, lessons)                    │
-│   ├── curriculum.md   (learning topics, progress)                   │
-│   └── tournaments.md  (calendar, travel, results)                   │
+│   Google Drive (user-selected root folder)                          │
+│   ├── folder1/                                                       │
+│   │   ├── index.md                                                   │
+│   │   └── notes.md                                                   │
+│   ├── folder2/                                                       │
+│   │   └── readme.md                                                  │
+│   └── ...                                                            │
 │                                                                      │
 └─────────────────────────────────────────────────────────────────────┘
                               ▲
-                              │ reads files / writes updates
-                              │
-┌─────────────────────────────┴───────────────────────────────────────┐
-│                      INTELLIGENCE LAYER                              │
-│                                                                      │
-│   Claude Server (Mac via Tailscale)                                 │
-│   • Express server on port 3847                                      │
-│   • Runs Claude CLI with local file access                          │
-│   • Handles natural language requests                                │
-│   • Updates markdown files directly                                  │
-│                                                                      │
-└─────────────────────────────────────────────────────────────────────┘
-                              ▲
-                              │ HTTP requests via Tailscale
+                              │ Google Drive API v3
                               │
 ┌─────────────────────────────┴───────────────────────────────────────┐
 │                      PRESENTATION LAYER                              │
 │                                                                      │
-│   Chess Tracker Website (Vercel)                                    │
+│   Context Viewer Website (Vercel)                                   │
+│   • User selects root folder via Google Picker                      │
+│   • Dynamic navigation from folder structure                        │
 │   • Renders markdown files as-is (react-markdown)                   │
-│   • NO parsing of markdown structure                                │
-│   • Voice/text input → calls Claude server                          │
 │   • Mobile-first responsive design                                  │
 │                                                                      │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-## Request Flow
+## User Flow
 
 ```
-User types: "Update Rapha's rating to 1750"
-                    │
-                    ▼
-         ┌─────────────────────┐
-         │  Website            │
-         │  VoiceInput.tsx     │
-         └─────────────────────┘
-                    │ POST /api/claude
-                    ▼
-         ┌─────────────────────┐
-         │  Claude Server      │
-         │  (Mac:3847)         │
-         │                     │
-         │  1. Receives request│
-         │  2. Runs Claude CLI │
-         │  3. Claude reads    │
-         │     chess.md        │
-         │  4. Claude updates  │
-         │     the rating      │
-         │  5. Returns response│
-         └─────────────────────┘
-                    │
-                    ▼
-         ┌─────────────────────┐
-         │  Google Drive       │
-         │  chess.md updated   │
-         └─────────────────────┘
-                    │
-                    ▼
-         ┌─────────────────────┐
-         │  Website refreshes  │
-         │  Shows new content  │
-         └─────────────────────┘
+1. User signs in with Google
+           │
+           ▼
+2. User selects root folder in Settings
+           │
+           ▼
+3. Bottom nav shows first 4 subfolders + More
+           │
+           ▼
+4. User taps folder → sees subfolders + files
+           │
+           ▼
+5. User taps file → renders markdown content
 ```
 
 ## Website Features
@@ -92,54 +60,18 @@ User types: "Update Rapha's rating to 1750"
 
 | Feature | Description |
 |---------|-------------|
-| **Markdown Viewer** | Renders any markdown file as-is using react-markdown |
-| **Multiple Pages** | Home (chess.md), Coaches, Tournaments, Curriculum, Settings |
-| **Claude Chat** | Text input to send requests to Claude |
-| **Response Display** | Shows Claude's responses inline |
-| **Mobile-First** | Bottom navigation, card layout, responsive tables |
+| **Folder Browser** | Navigate folder structure from selected root |
+| **Dynamic Navigation** | Bottom nav shows first 4 folders dynamically |
+| **Markdown Viewer** | Renders any markdown file using react-markdown |
+| **Index Files** | Auto-displays index.md or readme.md in folders |
+| **Root Folder Picker** | Google Picker API for folder selection |
+| **Mobile-First** | Bottom navigation, card layout, responsive design |
 
 ### What the Website DOES NOT DO
 
 - ❌ Parse or understand markdown structure
-- ❌ Direct editing via forms
-- ❌ CRUD operations
-- ❌ Run Claude locally (uses remote Mac server)
-- ❌ Store any data (purely reads from Drive)
-
-## Claude Server
-
-**Location:** `~/Workspace/chess-claude-server/`
-**Port:** 3847 (accessible via Tailscale)
-
-### Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/health` | GET | Health check |
-| `/api/claude` | POST | Send request to Claude |
-
-### Request Format
-
-```json
-{
-  "request": "What tournaments are coming up?",
-  "userEmail": "user@example.com"
-}
-```
-
-### Response Format
-
-```json
-{
-  "response": "The next tournament is..."
-}
-```
-
-### Security
-
-- Email whitelist validation
-- Tailscale network access only (no public internet)
-- `--dangerously-skip-permissions` for local file access
+- ❌ Edit or modify files
+- ❌ Store files locally (reads from Drive on demand)
 
 ## Technology Stack
 
@@ -152,9 +84,8 @@ User types: "Update Rapha's rating to 1750"
 | Markdown | react-markdown + remark-gfm |
 | Auth | Google OAuth 2.0 |
 | Data | Google Drive API v3 |
+| Folder Picker | Google Picker API |
 | Hosting | Vercel |
-| Claude | Express + Claude CLI on Mac |
-| Network | Tailscale |
 
 ## File Structure
 
@@ -163,25 +94,46 @@ src/
 ├── components/
 │   ├── layout/          # Header, BottomNav, Layout
 │   └── ui/              # MarkdownViewer, VoiceInput
-├── pages/               # HomePage, CoachesPage, etc.
+├── pages/
+│   ├── HomePage.tsx     # Root folder contents
+│   ├── FolderPage.tsx   # Subfolder contents
+│   ├── FilePage.tsx     # Markdown file viewer
+│   ├── MorePage.tsx     # All folders + settings link
+│   ├── SettingsPage.tsx # Folder picker, account
+│   └── LoginPage.tsx    # Google sign-in
 ├── services/
 │   ├── googleAuth.ts    # OAuth + whitelist
-│   ├── googleDrive.ts   # Read raw markdown files
-│   └── claudeServer.ts  # Call Claude server
-├── hooks/               # useAuth
-└── types/               # User type only
+│   ├── googleDrive.ts   # Drive API functions
+│   └── claudeServer.ts  # (optional) Claude integration
+├── hooks/
+│   └── useAuth.tsx      # Auth context
+└── types/
+    └── index.ts         # User type
 ```
+
+## Routing
+
+| Route | Component | Description |
+|-------|-----------|-------------|
+| `/` | HomePage | Shows root folder contents |
+| `/folder/:folderId` | FolderPage | Shows folder contents |
+| `/file/:fileId` | FilePage | Renders markdown file |
+| `/more` | MorePage | All folders + settings |
+| `/settings` | SettingsPage | Root folder picker, account |
+| `/login` | LoginPage | Google sign-in |
+
+## Storage
+
+All stored in localStorage:
+
+| Key | Value |
+|-----|-------|
+| `context-viewer-user` | Google user info + access token |
+| `context-viewer-root-folder` | Selected root folder ID |
+| `context-viewer-root-folder-name` | Selected root folder name |
 
 ## Security Model
 
-1. **Google OAuth** - Only whitelisted accounts can view
-2. **Read-only website** - Cannot modify files directly
-3. **Tailscale** - Claude server only accessible on private network
-4. **Email validation** - Claude server validates user email
-
-## Future Enhancements
-
-1. **Push notifications** - "Lesson in 1 hour"
-2. **PWA support** - Install on home screen
-3. **Shared calendar** - Export to Google Calendar
-4. **Progress reports** - Generated by Claude
+1. **Google OAuth** - Only whitelisted accounts can access
+2. **Read-only** - Cannot modify files, only view
+3. **Token refresh** - Auto-clears on 401, prompts re-login
