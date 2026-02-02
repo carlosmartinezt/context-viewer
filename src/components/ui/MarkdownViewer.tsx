@@ -44,7 +44,7 @@ export function MarkdownViewer({ content, className = '', files = [] }: Markdown
         components={{
           // Style tables for mobile
           table: ({ children }) => (
-            <div className="overflow-x-auto -mx-4 px-4">
+            <div className="overflow-x-auto -mx-4 px-4 mb-4">
               <table className="min-w-full text-sm">{children}</table>
             </div>
           ),
