@@ -67,14 +67,14 @@ export function FolderPage() {
         <div className="space-y-4">
           <FolderNav folders={contents?.folders || []} files={contents?.files || []} />
           <div className="card">
-            <MarkdownViewer content={fileContent} />
+            <MarkdownViewer content={fileContent} files={contents?.files || []} />
           </div>
         </div>
       ) : (
         <>
           {fileContent && indexFile && (
             <div className="card">
-              <MarkdownViewer content={fileContent} />
+              <MarkdownViewer content={fileContent} files={contents?.files || []} />
             </div>
           )}
 

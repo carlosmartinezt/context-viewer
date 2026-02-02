@@ -1,12 +1,42 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { Link } from 'react-router-dom';
+
+interface FileInfo {
+  id: string;
+  name: string;
+}
 
 interface MarkdownViewerProps {
   content: string;
   className?: string;
+  files?: FileInfo[];
 }
 
-export function MarkdownViewer({ content, className = '' }: MarkdownViewerProps) {
+export function MarkdownViewer({ content, className = '', files = [] }: MarkdownViewerProps) {
+  // Helper to resolve relative .md links to file IDs
+  const resolveLink = (href: string | undefined): { type: 'internal' | 'external'; to: string } | null => {
+    if (!href) return null;
+
+    // External links (http, https, mailto, etc.)
+    if (href.match(/^(https?:|mailto:|tel:)/i)) {
+      return { type: 'external', to: href };
+    }
+
+    // Relative .md links - try to find in files array
+    const cleanHref = href.replace(/^\.\//, ''); // Remove leading ./
+    const matchingFile = files.find(f =>
+      f.name.toLowerCase() === cleanHref.toLowerCase() ||
+      f.name.toLowerCase() === cleanHref.toLowerCase() + '.md'
+    );
+
+    if (matchingFile) {
+      return { type: 'internal', to: `/file/${matchingFile.id}` };
+    }
+
+    // Unknown link type - treat as external
+    return { type: 'external', to: href };
+  };
   return (
     <div className={`prose prose-sm max-w-none ${className}`}>
       <ReactMarkdown
@@ -28,17 +58,33 @@ export function MarkdownViewer({ content, className = '' }: MarkdownViewerProps)
               {children}
             </td>
           ),
-          // Style links
-          a: ({ href, children }) => (
-            <a
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[var(--color-accent)] hover:underline cursor-pointer"
-            >
-              {children}
-            </a>
-          ),
+          // Style links - internal .md files navigate within app, external open in new tab
+          a: ({ href, children }) => {
+            const resolved = resolveLink(href);
+            if (!resolved) {
+              return <span className="text-[var(--color-accent)]">{children}</span>;
+            }
+            if (resolved.type === 'internal') {
+              return (
+                <Link
+                  to={resolved.to}
+                  className="text-[var(--color-accent)] hover:underline cursor-pointer"
+                >
+                  {children}
+                </Link>
+              );
+            }
+            return (
+              <a
+                href={resolved.to}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[var(--color-accent)] hover:underline cursor-pointer"
+              >
+                {children}
+              </a>
+            );
+          },
           // Style checkboxes
           input: ({ type, checked }) => {
             if (type === 'checkbox') {

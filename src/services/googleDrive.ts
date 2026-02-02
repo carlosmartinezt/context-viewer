@@ -141,6 +141,19 @@ export async function getFolder(
   return response.json();
 }
 
+// Get file metadata with parent folder
+export async function getFileWithParent(
+  accessToken: string,
+  fileId: string
+): Promise<{ id: string; name: string; parents?: string[] }> {
+  const response = await driveApiFetch(
+    `${DRIVE_API_BASE}/files/${fileId}?fields=id,name,parents`,
+    accessToken
+  );
+
+  return response.json();
+}
+
 // ========== LEGACY COMPATIBILITY (will be removed) ==========
 // These are kept temporarily to avoid breaking existing code during migration
 

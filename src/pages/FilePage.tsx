@@ -1,13 +1,34 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
-import { readFile } from '../services/googleDrive';
+import { readFile, getFileWithParent, listFolderContents } from '../services/googleDrive';
 import { MarkdownViewer } from '../components/ui/MarkdownViewer';
+import { FolderNav } from '../components/ui/FolderNav';
 
 export function FilePage() {
   const { fileId } = useParams<{ fileId: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // Get file metadata to find parent folder
+  const { data: fileMeta } = useQuery({
+    queryKey: ['fileMeta', fileId, user?.accessToken],
+    queryFn: () => getFileWithParent(user!.accessToken, fileId!),
+    enabled: !!user?.accessToken && !!fileId,
+  });
+
+  const parentFolderId = fileMeta?.parents?.[0];
+
+  // Get sibling files/folders from parent folder
+  const { data: siblings } = useQuery({
+    queryKey: ['folderContents', parentFolderId, user?.accessToken],
+    queryFn: () => listFolderContents(user!.accessToken, parentFolderId!),
+    enabled: !!user?.accessToken && !!parentFolderId,
+  });
+
+  // Exclude current file from siblings
+  const siblingFiles = siblings?.files.filter(f => f.id !== fileId) || [];
+  const siblingFolders = siblings?.folders || [];
 
   const { data: content, isLoading, error } = useQuery({
     queryKey: ['file', fileId, user?.accessToken],
@@ -49,6 +70,9 @@ export function FilePage() {
         Back
       </button>
 
+      {/* Sibling navigation */}
+      <FolderNav folders={siblingFolders} files={siblingFiles} />
+
       <div className="card">
         {isLoading ? (
           <div className="animate-pulse space-y-4">
@@ -57,7 +81,7 @@ export function FilePage() {
             <div className="h-4 bg-[var(--color-bg-subtle)] rounded w-2/3"></div>
           </div>
         ) : content ? (
-          <MarkdownViewer content={content} />
+          <MarkdownViewer content={content} files={siblings?.files || []} />
         ) : (
           <p className="text-[var(--color-text-secondary)]">No content found</p>
         )}
