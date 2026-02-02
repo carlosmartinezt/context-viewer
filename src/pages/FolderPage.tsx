@@ -26,20 +26,29 @@ export function FolderPage() {
 
   const singleFile = isSingleFile ? contents.files[0] : null;
 
-  const indexFile = !isSingleFile ? contents?.files.find(f =>
+  // File with same name as folder (e.g., "health.md" in folder "health")
+  const folderNameFile = !isSingleFile && folder ? contents?.files.find(f =>
+    f.name.toLowerCase() === `${folder.name.toLowerCase()}.md`
+  ) : null;
+
+  const indexFile = !isSingleFile && !folderNameFile ? contents?.files.find(f =>
     f.name.toLowerCase() === 'index.md' || f.name.toLowerCase() === 'readme.md'
   ) : null;
 
-  const fileToRead = singleFile || indexFile;
+  const fileToRead = singleFile || folderNameFile || indexFile;
   const { data: fileContent } = useQuery({
     queryKey: ['fileContent', fileToRead?.id, user?.accessToken],
     queryFn: () => readFile(user!.accessToken, fileToRead!.id),
     enabled: !!user?.accessToken && !!fileToRead?.id,
   });
 
-  const otherFiles = contents?.files.filter(f =>
-    f.name.toLowerCase() !== 'index.md' && f.name.toLowerCase() !== 'readme.md'
-  ) || [];
+  const otherFiles = contents?.files.filter(f => {
+    const name = f.name.toLowerCase();
+    const folderName = folder?.name.toLowerCase();
+    return name !== 'index.md' &&
+           name !== 'readme.md' &&
+           name !== `${folderName}.md`;
+  }) || [];
 
   return (
     <div className="py-6 lg:py-10 space-y-6">
