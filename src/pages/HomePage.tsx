@@ -91,7 +91,10 @@ export function HomePage() {
         </div>
       ) : isSingleFile && fileContent ? (
         <div className="space-y-4">
-          <FolderNav folders={contents?.folders || []} files={contents?.files || []} />
+          <FolderNav
+            folders={contents?.folders || []}
+            files={contents?.files.filter(f => f.id !== fileToShow?.id) || []}
+          />
           <div className="card">
             <MarkdownViewer content={fileContent} files={contents?.files || []} />
           </div>

@@ -14,8 +14,8 @@ interface FolderNavProps {
 export function FolderNav({ folders, files }: FolderNavProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Hide if nothing to navigate to (single file, no folders)
-  if (folders.length === 0 && files.length <= 1) {
+  // Hide if nothing to navigate to
+  if (folders.length === 0 && files.length === 0) {
     return null;
   }
 
