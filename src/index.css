@@ -2,7 +2,7 @@
 
 /* ===== Design System ===== */
 :root {
-  /* Warm, sophisticated palette */
+  /* Warm, sophisticated palette - Light Mode */
   --color-bg: #faf9f7;
   --color-bg-elevated: #ffffff;
   --color-bg-subtle: #f5f4f1;
@@ -18,19 +18,57 @@
   --color-accent-hover: #4a5744;
   --color-accent-subtle: #e8ebe6;
 
+  --color-warning: #d97706;
+  --color-warning-subtle: #fde68a;
+  --color-warning-bg: #fef3c7;
+
+  --color-danger: #dc2626;
+  --color-danger-subtle: #fecaca;
+  --color-danger-bg: #fef2f2;
+
   /* Typography */
   --font-display: 'Newsreader', Georgia, serif;
   --font-body: 'DM Sans', system-ui, sans-serif;
 
   /* Spacing */
-  --header-height: 4rem;
-  --nav-height: 4.5rem;
+  --header-height: 3rem;
+  --nav-height: 3.5rem;
   --sidebar-width: 16rem;
 
   /* Shadows */
   --shadow-sm: 0 1px 2px rgba(26, 25, 24, 0.04);
   --shadow-md: 0 4px 12px rgba(26, 25, 24, 0.06);
   --shadow-lg: 0 8px 24px rgba(26, 25, 24, 0.08);
+}
+
+/* Dark Mode */
+[data-theme="dark"] {
+  --color-bg: #1a1918;
+  --color-bg-elevated: #242322;
+  --color-bg-subtle: #2a2928;
+
+  --color-text: #f5f4f1;
+  --color-text-secondary: #a8a5a0;
+  --color-text-tertiary: #7a7672;
+
+  --color-border: #3a3836;
+  --color-border-subtle: #2e2d2b;
+
+  --color-accent: #8fa584;
+  --color-accent-hover: #a3b89a;
+  --color-accent-subtle: #2d332a;
+
+  --color-warning: #fbbf24;
+  --color-warning-subtle: #78350f;
+  --color-warning-bg: #451a0333;
+
+  --color-danger: #f87171;
+  --color-danger-subtle: #7f1d1d;
+  --color-danger-bg: #450a0a33;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 /* ===== Base ===== */
@@ -46,6 +84,12 @@ html {
   background: var(--color-bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Smooth transitions for theme switching */
+html *, html *::before, html *::after {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 }
 
 body {
@@ -65,10 +109,17 @@ h1, h2, h3, h4, h5, h6 {
 @layer utilities {
   .card {
     background: var(--color-bg-elevated);
-    border-radius: 12px;
+    border-radius: 10px;
     border: 1px solid var(--color-border-subtle);
-    padding: 1.25rem;
+    padding: 0.875rem;
     box-shadow: var(--shadow-sm);
+  }
+
+  @media (min-width: 1024px) {
+    .card {
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
   }
 
   .card-hover {
@@ -123,7 +174,7 @@ h1, h2, h3, h4, h5, h6 {
   .content-area {
     max-width: 48rem;
     margin: 0 auto;
-    padding: 1.5rem 1rem;
+    padding: 0.75rem 0.75rem;
   }
 
   /* Desktop: shift content for sidebar */

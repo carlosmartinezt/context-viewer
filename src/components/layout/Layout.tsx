@@ -12,7 +12,7 @@ export function Layout() {
       <Sidebar />
 
       {/* Main content area */}
-      <main className="pt-16 pb-20 lg:pb-8 lg:pl-64">
+      <main className="pt-[var(--header-height)] pb-[calc(var(--nav-height)+0.5rem)] lg:pb-8 lg:pl-64">
         <div className="content-area">
           <Outlet />
         </div>
