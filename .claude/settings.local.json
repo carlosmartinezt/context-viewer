@@ -23,7 +23,8 @@
       "Bash(npm root:*)",
       "Bash(launchctl list:*)",
       "Bash(npm run lint:*)",
-      "Bash(gh repo delete:*)"
+      "Bash(gh repo delete:*)",
+      "WebFetch(domain:context-viewer.vercel.app)"
     ]
   }
 }

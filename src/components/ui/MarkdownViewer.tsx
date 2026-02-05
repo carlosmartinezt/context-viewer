@@ -54,8 +54,9 @@ export function MarkdownViewer({ content, className = '', files = [], folders = 
       return { type: 'internal', to: `/file/${matchingFile.id}` };
     }
 
-    // Unknown link type - treat as external
-    return { type: 'external', to: href };
+    // Unresolved relative path - return null to render as non-clickable text
+    // Only URLs with protocols should be treated as external
+    return null;
   };
   return (
     <div className={`prose prose-sm max-w-none ${className}`}>
