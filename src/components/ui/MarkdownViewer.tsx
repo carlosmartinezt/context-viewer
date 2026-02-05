@@ -1,6 +1,8 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
+import { resolvePathFromRoot } from '../../services/googleDrive';
 
 interface ItemInfo {
   id: string;
@@ -15,13 +17,44 @@ interface MarkdownViewerProps {
 }
 
 export function MarkdownViewer({ content, className = '', files = [], folders = [] }: MarkdownViewerProps) {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // Handle clicks on unresolved links - resolve path from root and navigate
+  const handleUnresolvedLinkClick = async (e: React.MouseEvent, path: string) => {
+    e.preventDefault();
+    if (!user?.accessToken) return;
+
+    try {
+      const result = await resolvePathFromRoot(user.accessToken, path);
+      if (result) {
+        navigate(result.type === 'file' ? `/file/${result.id}` : `/folder/${result.id}`);
+      } else {
+        console.warn('Could not resolve path:', path);
+      }
+    } catch (error) {
+      console.error('Error resolving path:', path, error);
+    }
+  };
+
   // Helper to resolve relative .md links to file IDs or folder IDs
-  const resolveLink = (href: string | undefined): { type: 'internal' | 'external'; to: string } | null => {
+  const resolveLink = (href: string | undefined): { type: 'internal' | 'external' | 'unresolved'; to: string } | null => {
     if (!href) return null;
 
-    // External links (http, https, mailto, etc.)
-    if (href.match(/^(https?:|mailto:|tel:)/i)) {
+    // External links - must have protocol AND a valid domain (contains a dot)
+    // This prevents treating malformed URLs like "http://02_areas/file.md" as external
+    if (href.match(/^(mailto:|tel:)/i)) {
       return { type: 'external', to: href };
+    }
+    if (href.match(/^https?:\/\//i)) {
+      // Check if it has a real domain (contains a dot before the first slash after protocol)
+      const afterProtocol = href.replace(/^https?:\/\//i, '');
+      const domainPart = afterProtocol.split('/')[0];
+      if (domainPart.includes('.')) {
+        return { type: 'external', to: href };
+      }
+      // Malformed URL like "http://02_areas/file.md" - strip protocol and treat as relative
+      href = afterProtocol;
     }
 
     // Clean the href: remove leading ./ and trailing /
@@ -54,9 +87,8 @@ export function MarkdownViewer({ content, className = '', files = [], folders = 
       return { type: 'internal', to: `/file/${matchingFile.id}` };
     }
 
-    // Unresolved relative path - return null to render as non-clickable text
-    // Only URLs with protocols should be treated as external
-    return null;
+    // Unresolved relative path - mark as unresolved so we can try to resolve from root on click
+    return { type: 'unresolved', to: cleanHref };
   };
   return (
     <div className={`prose prose-sm max-w-none ${className}`}>
@@ -93,6 +125,18 @@ export function MarkdownViewer({ content, className = '', files = [], folders = 
                 >
                   {children}
                 </Link>
+              );
+            }
+            if (resolved.type === 'unresolved') {
+              // Clickable link that resolves path from root folder on click
+              return (
+                <a
+                  href="#"
+                  onClick={(e) => handleUnresolvedLinkClick(e, resolved.to)}
+                  className="text-[var(--color-accent)] hover:underline cursor-pointer"
+                >
+                  {children}
+                </a>
               );
             }
             return (

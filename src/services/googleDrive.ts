@@ -154,3 +154,79 @@ export async function getFileWithParent(
   return response.json();
 }
 
+// Resolve a relative path from the root folder to a file or folder ID
+// Path format: "02_areas/finances/subscriptions.md" or "01_projects/my_project"
+export async function resolvePathFromRoot(
+  accessToken: string,
+  path: string
+): Promise<{ type: 'file' | 'folder'; id: string } | null> {
+  const rootFolderId = getRootFolderId();
+  if (!rootFolderId) return null;
+
+  // Clean the path: remove leading ./ and trailing /
+  const cleanPath = path.replace(/^\.\//, '').replace(/\/$/, '');
+  const segments = cleanPath.split('/').filter(Boolean);
+
+  if (segments.length === 0) return null;
+
+  let currentFolderId = rootFolderId;
+
+  // Walk through each segment except the last
+  for (let i = 0; i < segments.length - 1; i++) {
+    const segment = segments[i];
+    const folders = await listFolders(accessToken, currentFolderId);
+    const matchingFolder = folders.find(
+      (f) => f.name.toLowerCase() === segment.toLowerCase()
+    );
+
+    if (!matchingFolder) {
+      return null; // Path segment not found
+    }
+
+    currentFolderId = matchingFolder.id;
+  }
+
+  // Handle the last segment - could be a file or folder
+  const lastSegment = segments[segments.length - 1];
+  const isMarkdownFile = lastSegment.toLowerCase().endsWith('.md');
+
+  if (isMarkdownFile) {
+    // Look for a matching file
+    const files = await listMarkdownFiles(accessToken, currentFolderId);
+    const matchingFile = files.find(
+      (f) => f.name.toLowerCase() === lastSegment.toLowerCase()
+    );
+
+    if (matchingFile) {
+      return { type: 'file', id: matchingFile.id };
+    }
+  }
+
+  // Look for a matching folder (with or without .md extension in case of folder-named files)
+  const folders = await listFolders(accessToken, currentFolderId);
+  const folderName = isMarkdownFile ? lastSegment.replace(/\.md$/i, '') : lastSegment;
+  const matchingFolder = folders.find(
+    (f) => f.name.toLowerCase() === folderName.toLowerCase() ||
+           f.name.toLowerCase() === lastSegment.toLowerCase()
+  );
+
+  if (matchingFolder) {
+    return { type: 'folder', id: matchingFolder.id };
+  }
+
+  // Also check for file without .md extension
+  if (!isMarkdownFile) {
+    const files = await listMarkdownFiles(accessToken, currentFolderId);
+    const matchingFile = files.find(
+      (f) => f.name.toLowerCase() === lastSegment.toLowerCase() ||
+             f.name.toLowerCase() === lastSegment.toLowerCase() + '.md'
+    );
+
+    if (matchingFile) {
+      return { type: 'file', id: matchingFile.id };
+    }
+  }
+
+  return null;
+}
+

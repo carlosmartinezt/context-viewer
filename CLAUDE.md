@@ -78,3 +78,17 @@ docs/                    # Application design docs
 - Google access tokens expire after ~1 hour
 - `driveApiFetch()` in googleDrive.ts detects 401s and auto-clears localStorage + reloads
 - Settings page has "Force Re-login" button for manual refresh
+
+## Markdown Link Resolution
+
+MarkdownViewer resolves links in markdown files with three strategies:
+
+1. **Internal links**: Sibling files/folders in the same directory → resolved immediately via `files`/`folders` props
+2. **External links**: Real URLs with domains (e.g., `https://example.com`) → open in new tab
+3. **Cross-folder links**: Paths like `02_areas/finances/subscriptions.md` → resolved on-click via `resolvePathFromRoot()`
+
+**Gotcha**: react-markdown transforms relative paths by adding `http://` prefix (e.g., `02_areas/file.md` becomes `http://02_areas/file.md`). The code detects these malformed URLs by checking if the "domain" contains a dot - real domains have dots, fake paths don't.
+
+**Key functions**:
+- `resolveLink()` in MarkdownViewer.tsx - categorizes links as internal/external/unresolved
+- `resolvePathFromRoot()` in googleDrive.ts - walks folder tree from root to resolve cross-folder paths
