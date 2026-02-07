@@ -72,6 +72,12 @@ Open http://localhost:5173
 3. Add environment variable: `VITE_GOOGLE_CLIENT_ID`
 4. Update Google OAuth authorized origins to include your Vercel URL
 
+## Commands
+
+```bash
+# Deploy
+npx vercel --prod
+```
 ## Project Structure
 
 ```
