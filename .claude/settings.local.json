@@ -24,7 +24,10 @@
       "Bash(launchctl list:*)",
       "Bash(npm run lint:*)",
       "Bash(gh repo delete:*)",
-      "WebFetch(domain:context-viewer.vercel.app)"
+      "WebFetch(domain:context-viewer.vercel.app)",
+      "mcp__plugin_playwright_playwright__browser_take_screenshot",
+      "mcp__plugin_playwright_playwright__browser_console_messages",
+      "mcp__plugin_playwright_playwright__browser_close"
     ]
   }
 }

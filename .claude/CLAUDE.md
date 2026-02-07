@@ -4,6 +4,8 @@
 
 **After every conversation, update this file with any new learnings, changes, or context.** This is critical for maintaining continuity across sessions. Document architectural decisions, new patterns, gotchas discovered, and any changes to the codebase structure.
 
+**After making any change, always run `npm run build` to validate TypeScript and ensure the build succeeds.**
+
 ## Quick Context
 
 **Context Viewer** - Mobile-first Google Drive markdown file browser. Renders markdown files as-is using react-markdown with dynamic folder-based navigation.
@@ -37,7 +39,9 @@ src/
 ├── services/            # googleAuth, googleDrive
 ├── hooks/               # useAuth
 ├── types/               # User type, GIS type declarations
-docs/                    # Application design docs
+.claude/
+├── docs/                # Application design docs
+└── CLAUDE.md            # This file - AI context and instructions
 ```
 
 ## How It Works
