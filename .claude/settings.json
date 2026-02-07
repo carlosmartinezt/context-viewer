@@ -6,9 +6,9 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(curl:*)",
-      "Bash(/usr/local/Cellar/node/25.5.0/bin/vercel:*)",
-      "Bash(npx vercel:*)"
+      "Bash(npx vercel:*)",
+      "WebFetch(domain:context-viewer.vercel.app)",
+      "Bash(npm run dev:*)"
     ]
   }
 }

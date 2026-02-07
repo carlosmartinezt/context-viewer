@@ -24,6 +24,7 @@ interface AuthContextType {
   signIn: () => void;
   signOut: () => void;
   accessToken: string | null;
+  requestToken: (prompt?: string) => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -140,7 +141,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         // If user is already stored, try silent token refresh
         if (stored) {
+          // Timeout: if silent refresh doesn't complete in 3s (e.g. popup blocked on mobile), stop loading anyway
+          const timeout = setTimeout(() => setLoading(false), 3000);
           requestAccessToken('').then((token) => {
+            clearTimeout(timeout);
             if (token) setAccessToken(token);
             setLoading(false);
           });
@@ -184,6 +188,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signIn,
         signOut,
         accessToken,
+        requestToken: requestAccessToken,
       }}
     >
       {children}

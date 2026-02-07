@@ -2,7 +2,7 @@
 
 ## IMPORTANT: Compound Context
 
-**After every conversation, update this file with any new learnings, changes, or context.** This is critical for maintaining continuity across sessions. Document architectural decisions, new patterns, gotchas discovered, and any changes to the codebase structure.
+**After every conversation, update docs files with any new learnings, changes, or context.** This is critical for maintaining continuity across sessions. Document architectural decisions, new patterns, gotchas discovered, and any changes to the codebase structure.
 
 **After making any change, always run `npm run build` to validate TypeScript and ensure the build succeeds.**
 
@@ -79,12 +79,15 @@ src/
 
 ## Auth Architecture (GIS)
 
+See [`.claude/docs/authentication.md`](.claude/docs/authentication.md) for full details.
+
 - **Identity** (`GoogleUser`): email, name, picture — persisted in localStorage, lasts until sign-out
 - **Access token**: held in-memory (React state), never persisted — refreshed silently via GIS `requestAccessToken({ prompt: '' })`
 - **Sign-in flow**: GIS `google.accounts.id.initialize()` + `renderButton()` → ID token JWT → `decodeIdToken()` → validate whitelist → store identity → request access token via `google.accounts.oauth2.initTokenClient()`
 - **Token refresh**: `driveApiFetch()` detects 401 → calls registered `tokenRefresher` → silent `requestAccessToken` → retries request
 - **GIS script**: loaded via `<script>` in `index.html`, types declared in `src/types/google.accounts.d.ts`
 - Settings page has "Force Re-login" button for manual refresh
+- **Mobile gotcha**: Silent token refresh (`prompt: ''`) gets blocked on mobile browsers. A 3-second timeout ensures UI still loads. Actions requiring a token (like folder picker) fall back to `requestToken('consent')` to trigger explicit consent.
 
 ## Markdown Link Resolution
 

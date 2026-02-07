@@ -1,78 +1,26 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
 import { useQueryClient } from '@tanstack/react-query';
 import { ProfileAvatar } from '../components/ui/ProfileAvatar';
+import { FolderPicker } from '../components/ui/FolderPicker';
 import {
   getRootFolderId,
   getRootFolderName,
   setRootFolderId,
   clearRootFolder,
   getFolder,
+  type DriveFolder,
 } from '../services/googleDrive';
 
-declare global {
-  interface Window {
-    google?: {
-      picker: {
-        PickerBuilder: new () => GooglePickerBuilder;
-        ViewId: { FOLDERS: string };
-        Feature: { NAV_HIDDEN: string };
-        Action: { PICKED: string; CANCEL: string };
-        DocsView: new (viewId: string) => GoogleDocsView;
-      };
-    };
-    gapi?: {
-      load: (api: string, callback: () => void) => void;
-    };
-  }
-}
-
-interface GooglePickerBuilder {
-  addView: (view: GoogleDocsView) => GooglePickerBuilder;
-  setOAuthToken: (token: string) => GooglePickerBuilder;
-  setCallback: (callback: (data: GooglePickerResponse) => void) => GooglePickerBuilder;
-  enableFeature: (feature: string) => GooglePickerBuilder;
-  setTitle: (title: string) => GooglePickerBuilder;
-  build: () => { setVisible: (visible: boolean) => void };
-}
-
-interface GoogleDocsView {
-  setSelectFolderEnabled: (enabled: boolean) => GoogleDocsView;
-  setMimeTypes: (types: string) => GoogleDocsView;
-}
-
-interface GooglePickerResponse {
-  action: string;
-  docs?: Array<{ id: string; name: string }>;
-}
-
 export function SettingsPage() {
-  const { user, signOut, accessToken } = useAuth();
+  const { user, signOut, accessToken, requestToken } = useAuth();
   const { theme, setTheme } = useTheme();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [rootFolderName, setRootFolderName] = useState<string | null>(getRootFolderName());
-  const [pickerLoaded, setPickerLoaded] = useState(false);
-
-  useEffect(() => {
-    const loadPicker = () => {
-      if (window.gapi) {
-        window.gapi.load('picker', () => {
-          setPickerLoaded(true);
-        });
-      }
-    };
-
-    if (!document.getElementById('google-api-script')) {
-      const script = document.createElement('script');
-      script.id = 'google-api-script';
-      script.src = 'https://apis.google.com/js/api.js';
-      script.onload = loadPicker;
-      document.body.appendChild(script);
-    } else if (window.gapi) {
-      loadPicker();
-    }
-  }, []);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const handleForceRefresh = () => {
     queryClient.invalidateQueries();
@@ -83,28 +31,25 @@ export function SettingsPage() {
     window.location.reload();
   };
 
-  const handleSelectFolder = () => {
-    if (!window.google?.picker || !accessToken) return;
+  const handleOpenPicker = async () => {
+    if (!accessToken) {
+      // Try silent refresh with timeout, fall back to consent if blocked (e.g. mobile)
+      const silentToken = await Promise.race([
+        requestToken(''),
+        new Promise<null>(r => setTimeout(() => r(null), 2000)),
+      ]);
+      if (!silentToken) {
+        const token = await requestToken('consent');
+        if (!token) return;
+      }
+    }
+    setPickerOpen(true);
+  };
 
-    const view = new window.google.picker.DocsView(window.google.picker.ViewId.FOLDERS)
-      .setSelectFolderEnabled(true)
-      .setMimeTypes('application/vnd.google-apps.folder');
-
-    const picker = new window.google.picker.PickerBuilder()
-      .addView(view)
-      .setOAuthToken(accessToken)
-      .setTitle('Select Root Folder')
-      .setCallback(async (data: GooglePickerResponse) => {
-        if (data.action === window.google!.picker.Action.PICKED && data.docs?.[0]) {
-          const folder = data.docs[0];
-          setRootFolderId(folder.id, folder.name);
-          setRootFolderName(folder.name);
-          queryClient.invalidateQueries();
-        }
-      })
-      .build();
-
-    picker.setVisible(true);
+  const handleFolderSelected = (folder: DriveFolder) => {
+    setRootFolderId(folder.id, folder.name);
+    queryClient.invalidateQueries();
+    navigate('/');
   };
 
   const handleClearFolder = async () => {
@@ -171,9 +116,8 @@ export function SettingsPage() {
             <p className="text-[var(--color-text-secondary)]">No folder selected</p>
           )}
           <button
-            onClick={handleSelectFolder}
-            disabled={!pickerLoaded}
-            className="w-full py-2.5 text-[var(--color-accent)] font-medium border border-[var(--color-accent)] rounded-lg hover:bg-[var(--color-accent-subtle)] transition-colors disabled:opacity-50"
+            onClick={handleOpenPicker}
+            className="w-full py-2.5 text-[var(--color-accent)] font-medium border border-[var(--color-accent)] rounded-lg hover:bg-[var(--color-accent-subtle)] transition-colors"
           >
             {rootFolderName ? 'Change Folder' : 'Select Root Folder'}
           </button>
@@ -269,6 +213,13 @@ export function SettingsPage() {
       <div className="text-center text-sm text-[var(--color-text-tertiary)]">
         Context Viewer v1.0.0
       </div>
+
+      <FolderPicker
+        isOpen={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onSelect={handleFolderSelected}
+        accessToken={accessToken}
+      />
     </div>
   );
 }
