@@ -48,7 +48,7 @@ interface GooglePickerResponse {
 }
 
 export function SettingsPage() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, accessToken } = useAuth();
   const { theme, setTheme } = useTheme();
   const queryClient = useQueryClient();
   const [rootFolderName, setRootFolderName] = useState<string | null>(getRootFolderName());
@@ -84,7 +84,7 @@ export function SettingsPage() {
   };
 
   const handleSelectFolder = () => {
-    if (!window.google?.picker || !user?.accessToken) return;
+    if (!window.google?.picker || !accessToken) return;
 
     const view = new window.google.picker.DocsView(window.google.picker.ViewId.FOLDERS)
       .setSelectFolderEnabled(true)
@@ -92,7 +92,7 @@ export function SettingsPage() {
 
     const picker = new window.google.picker.PickerBuilder()
       .addView(view)
-      .setOAuthToken(user.accessToken)
+      .setOAuthToken(accessToken)
       .setTitle('Select Root Folder')
       .setCallback(async (data: GooglePickerResponse) => {
         if (data.action === window.google!.picker.Action.PICKED && data.docs?.[0]) {
@@ -116,9 +116,9 @@ export function SettingsPage() {
   useEffect(() => {
     async function verifyFolder() {
       const folderId = getRootFolderId();
-      if (folderId && !rootFolderName && user?.accessToken) {
+      if (folderId && !rootFolderName && accessToken) {
         try {
-          const folder = await getFolder(user.accessToken, folderId);
+          const folder = await getFolder(accessToken, folderId);
           setRootFolderName(folder.name);
           setRootFolderId(folderId, folder.name);
         } catch {
@@ -127,7 +127,7 @@ export function SettingsPage() {
       }
     }
     verifyFolder();
-  }, [user?.accessToken, rootFolderName]);
+  }, [accessToken, rootFolderName]);
 
   return (
     <div className="py-6 lg:py-10 space-y-8">

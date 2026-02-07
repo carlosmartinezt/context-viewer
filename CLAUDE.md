@@ -36,13 +36,13 @@ src/
 ├── pages/               # HomePage, FolderPage, FilePage, MorePage, SettingsPage, LoginPage
 ├── services/            # googleAuth, googleDrive
 ├── hooks/               # useAuth
-├── types/               # User type only
+├── types/               # User type, GIS type declarations
 docs/                    # Application design docs
 ```
 
 ## How It Works
 
-1. User logs in with Google OAuth
+1. User signs in with Google Identity Services (GIS)
 2. User selects a root folder from Google Drive (in Settings)
 3. App shows subfolders in bottom navigation (first 4 folders)
 4. Clicking a folder shows its contents (subfolders + markdown files)
@@ -69,14 +69,17 @@ docs/                    # Application design docs
 
 ## Storage Keys
 
-- `context-viewer-user` - Google user info + access token
+- `context-viewer-user` - Google user identity (email, name, picture) — no access token
 - `context-viewer-root-folder` - Selected root folder ID
 - `context-viewer-root-folder-name` - Selected root folder name
 
-## Token Handling
+## Auth Architecture (GIS)
 
-- Google access tokens expire after ~1 hour
-- `driveApiFetch()` in googleDrive.ts detects 401s and auto-clears localStorage + reloads
+- **Identity** (`GoogleUser`): email, name, picture — persisted in localStorage, lasts until sign-out
+- **Access token**: held in-memory (React state), never persisted — refreshed silently via GIS `requestAccessToken({ prompt: '' })`
+- **Sign-in flow**: GIS `google.accounts.id.initialize()` + `renderButton()` → ID token JWT → `decodeIdToken()` → validate whitelist → store identity → request access token via `google.accounts.oauth2.initTokenClient()`
+- **Token refresh**: `driveApiFetch()` detects 401 → calls registered `tokenRefresher` → silent `requestAccessToken` → retries request
+- **GIS script**: loaded via `<script>` in `index.html`, types declared in `src/types/google.accounts.d.ts`
 - Settings page has "Force Re-login" button for manual refresh
 
 ## Markdown Link Resolution

@@ -6,14 +6,14 @@ import { listFolders, getRootFolderId, getRootFolderName } from '../services/goo
 const MAX_NAV_ITEMS = 4;
 
 export function MorePage() {
-  const { user } = useAuth();
+  const { accessToken } = useAuth();
   const rootFolderId = getRootFolderId();
   const rootFolderName = getRootFolderName();
 
   const { data: folders, isLoading } = useQuery({
-    queryKey: ['rootFolders', user?.accessToken, rootFolderId],
-    queryFn: () => listFolders(user!.accessToken, rootFolderId!),
-    enabled: !!user?.accessToken && !!rootFolderId,
+    queryKey: ['rootFolders', accessToken, rootFolderId],
+    queryFn: () => listFolders(accessToken!, rootFolderId!),
+    enabled: !!accessToken && !!rootFolderId,
   });
 
   const additionalFolders = (folders || []).slice(MAX_NAV_ITEMS);

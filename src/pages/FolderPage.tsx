@@ -7,47 +7,40 @@ import { FolderNav } from '../components/ui/FolderNav';
 
 export function FolderPage() {
   const { folderId } = useParams<{ folderId: string }>();
-  const { user } = useAuth();
+  const { accessToken } = useAuth();
   const navigate = useNavigate();
 
   const { data: folder } = useQuery({
-    queryKey: ['folder', folderId, user?.accessToken],
-    queryFn: () => getFolder(user!.accessToken, folderId!),
-    enabled: !!user?.accessToken && !!folderId,
+    queryKey: ['folder', folderId, accessToken],
+    queryFn: () => getFolder(accessToken!, folderId!),
+    enabled: !!accessToken && !!folderId,
   });
 
   const { data: contents, isLoading } = useQuery({
-    queryKey: ['folderContents', folderId, user?.accessToken],
-    queryFn: () => listFolderContents(user!.accessToken, folderId!),
-    enabled: !!user?.accessToken && !!folderId,
+    queryKey: ['folderContents', folderId, accessToken],
+    queryFn: () => listFolderContents(accessToken!, folderId!),
+    enabled: !!accessToken && !!folderId,
   });
 
   const isSingleFile = contents?.files.length === 1;
 
   const singleFile = isSingleFile ? contents.files[0] : null;
 
-  // File with same name as folder (e.g., "health.md" in folder "health")
-  const folderNameFile = !isSingleFile && folder ? contents?.files.find(f =>
-    f.name.toLowerCase() === `${folder.name.toLowerCase()}.md`
-  ) : null;
-
-  const indexFile = !isSingleFile && !folderNameFile ? contents?.files.find(f =>
+  const indexFile = !isSingleFile ? contents?.files.find(f =>
     f.name.toLowerCase() === 'index.md' || f.name.toLowerCase() === 'readme.md'
   ) : null;
 
-  const fileToRead = singleFile || folderNameFile || indexFile;
+  const fileToRead = singleFile || indexFile;
   const { data: fileContent } = useQuery({
-    queryKey: ['fileContent', fileToRead?.id, user?.accessToken],
-    queryFn: () => readFile(user!.accessToken, fileToRead!.id),
-    enabled: !!user?.accessToken && !!fileToRead?.id,
+    queryKey: ['fileContent', fileToRead?.id, accessToken],
+    queryFn: () => readFile(accessToken!, fileToRead!.id),
+    enabled: !!accessToken && !!fileToRead?.id,
   });
 
   const otherFiles = contents?.files.filter(f => {
     const name = f.name.toLowerCase();
-    const folderName = folder?.name.toLowerCase();
     return name !== 'index.md' &&
-           name !== 'readme.md' &&
-           name !== `${folderName}.md`;
+           name !== 'readme.md';
   }) || [];
 
   return (

@@ -4,25 +4,26 @@ import {
   useState,
   useEffect,
   useCallback,
+  useRef,
   type ReactNode,
 } from 'react';
 import {
   type GoogleUser,
-  initGoogleAuth,
-  signInWithGoogle,
-  parseOAuthCallback,
-  fetchGoogleUserInfo,
+  decodeIdToken,
+  isAuthorizedUser,
+  waitForGIS,
   GOOGLE_CLIENT_ID,
+  SCOPES,
 } from '../services/googleAuth';
+import { setTokenRefresher } from '../services/googleDrive';
 
 interface AuthContextType {
   user: GoogleUser | null;
   loading: boolean;
   error: string | null;
-  signIn: () => Promise<void>;
+  signIn: () => void;
   signOut: () => void;
   accessToken: string | null;
-  handleOAuthCallback: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -31,82 +32,148 @@ const STORAGE_KEY = 'context-viewer-user';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<GoogleUser | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Handle OAuth callback from URL hash
-  const handleOAuthCallback = useCallback(async (): Promise<boolean> => {
-    const callback = parseOAuthCallback();
-    if (!callback) return false;
+  const tokenClientRef = useRef<google.accounts.oauth2.TokenClient | null>(null);
+  // Promise-based deduplication for token refresh
+  const refreshPromiseRef = useRef<Promise<string | null> | null>(null);
 
-    try {
-      setLoading(true);
-      setError(null);
-      const googleUser = await fetchGoogleUserInfo(callback.accessToken);
-      setUser(googleUser);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(googleUser));
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Authentication failed');
-      return false;
-    } finally {
-      setLoading(false);
-    }
+  // Request an access token via GIS token client (silent or with consent)
+  const requestAccessToken = useCallback((prompt?: string): Promise<string | null> => {
+    return new Promise((resolve) => {
+      if (!tokenClientRef.current) {
+        resolve(null);
+        return;
+      }
+
+      // Store the resolve on the ref so the callback can call it
+      tokenCallbackRef.current = (token: string | null) => {
+        resolve(token);
+      };
+
+      tokenClientRef.current.requestAccessToken({ prompt: prompt ?? '' });
+    });
   }, []);
 
-  // Initialize and check for OAuth callback or stored user
+  // Callback ref for token client response
+  const tokenCallbackRef = useRef<((token: string | null) => void) | null>(null);
+
+  // Refresh access token with deduplication
+  const refreshAccessToken = useCallback((): Promise<string | null> => {
+    if (refreshPromiseRef.current) return refreshPromiseRef.current;
+
+    const promise = requestAccessToken('').then((token) => {
+      refreshPromiseRef.current = null;
+      if (token) setAccessToken(token);
+      return token;
+    });
+
+    refreshPromiseRef.current = promise;
+    return promise;
+  }, [requestAccessToken]);
+
+  // Register the refresher with googleDrive.ts
+  useEffect(() => {
+    setTokenRefresher(refreshAccessToken);
+  }, [refreshAccessToken]);
+
+  // Initialize GIS on mount
   useEffect(() => {
     async function init() {
+      // Restore identity from localStorage
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          setUser(JSON.parse(stored));
+        } catch {
+          localStorage.removeItem(STORAGE_KEY);
+        }
+      }
+
+      if (!GOOGLE_CLIENT_ID) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        // First, check for OAuth callback in URL hash (redirect flow)
-        const callback = parseOAuthCallback();
-        if (callback) {
-          const googleUser = await fetchGoogleUserInfo(callback.accessToken);
-          setUser(googleUser);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(googleUser));
-          setLoading(false);
-          return;
-        }
+        await waitForGIS();
 
-        // Check for stored user
-        const stored = localStorage.getItem(STORAGE_KEY);
+        // Initialize GIS ID (sign-in with Google)
+        google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: (response) => {
+            const decoded = decodeIdToken(response.credential);
+            if (!isAuthorizedUser(decoded.email)) {
+              setError('Unauthorized user');
+              return;
+            }
+            setUser(decoded);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(decoded));
+            setError(null);
+
+            // After sign-in, request an access token for Drive
+            requestAccessToken('consent').then((token) => {
+              if (token) setAccessToken(token);
+            });
+          },
+          auto_select: true,
+        });
+
+        // Initialize token client for Drive scopes
+        tokenClientRef.current = google.accounts.oauth2.initTokenClient({
+          client_id: GOOGLE_CLIENT_ID,
+          scope: SCOPES,
+          callback: (response) => {
+            if (response.error) {
+              tokenCallbackRef.current?.(null);
+              return;
+            }
+            setAccessToken(response.access_token);
+            tokenCallbackRef.current?.(response.access_token);
+          },
+          error_callback: () => {
+            tokenCallbackRef.current?.(null);
+          },
+        });
+
+        // If user is already stored, try silent token refresh
         if (stored) {
-          const parsed = JSON.parse(stored);
-          setUser(parsed);
-        }
-
-        // Initialize Google Auth
-        if (GOOGLE_CLIENT_ID) {
-          await initGoogleAuth();
+          requestAccessToken('').then((token) => {
+            if (token) setAccessToken(token);
+            setLoading(false);
+          });
+        } else {
+          setLoading(false);
         }
       } catch (err) {
-        console.error('Auth init error:', err);
+        console.error('GIS init error:', err);
         setError(err instanceof Error ? err.message : 'Authentication failed');
-      } finally {
         setLoading(false);
       }
     }
 
     init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const signIn = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      // This will redirect to Google - won't return
-      await signInWithGoogle();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Sign in failed');
-      setLoading(false);
-      throw err;
-    }
-  };
+  const signIn = useCallback(() => {
+    setError(null);
+    google.accounts.id.prompt((notification) => {
+      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+        // Prompt didn't show — request token directly (triggers consent)
+        requestAccessToken('consent');
+      }
+    });
+  }, [requestAccessToken]);
 
-  const signOut = () => {
+  const signOut = useCallback(() => {
     setUser(null);
+    setAccessToken(null);
     localStorage.removeItem(STORAGE_KEY);
-  };
+    google.accounts.id.disableAutoSelect();
+  }, []);
 
   return (
     <AuthContext.Provider
@@ -116,8 +183,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         error,
         signIn,
         signOut,
-        accessToken: user?.accessToken || null,
-        handleOAuthCallback,
+        accessToken,
       }}
     >
       {children}

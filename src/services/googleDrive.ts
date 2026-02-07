@@ -5,14 +5,36 @@ const DRIVE_API_BASE = 'https://www.googleapis.com/drive/v3';
 const STORAGE_KEY = 'context-viewer-user';
 const ROOT_FOLDER_KEY = 'context-viewer-root-folder';
 
-// Wrapper that handles expired tokens
+// Token refresh callback, registered by AuthProvider
+let tokenRefresher: (() => Promise<string | null>) | null = null;
+
+export function setTokenRefresher(fn: () => Promise<string | null>) {
+  tokenRefresher = fn;
+}
+
+// Wrapper that handles expired tokens with silent refresh
 async function driveApiFetch(url: string, accessToken: string): Promise<Response> {
   const response = await fetch(url, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
 
+  if (response.status === 401 && tokenRefresher) {
+    // Attempt silent token refresh
+    const newToken = await tokenRefresher();
+    if (newToken) {
+      const retry = await fetch(url, {
+        headers: { Authorization: `Bearer ${newToken}` },
+      });
+      if (retry.ok) return retry;
+    }
+    // Refresh failed — clear storage and reload to trigger login
+    localStorage.removeItem(STORAGE_KEY);
+    window.location.reload();
+    throw new Error('Session expired. Please sign in again.');
+  }
+
   if (response.status === 401) {
-    // Token expired - clear storage and reload to trigger login
+    // No refresher registered — fallback to old behavior
     localStorage.removeItem(STORAGE_KEY);
     window.location.reload();
     throw new Error('Session expired. Please sign in again.');
@@ -229,4 +251,3 @@ export async function resolvePathFromRoot(
 
   return null;
 }
-

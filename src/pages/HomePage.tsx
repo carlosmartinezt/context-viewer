@@ -11,14 +11,14 @@ import { MarkdownViewer } from '../components/ui/MarkdownViewer';
 import { FolderNav } from '../components/ui/FolderNav';
 
 export function HomePage() {
-  const { user } = useAuth();
+  const { accessToken } = useAuth();
   const rootFolderId = getRootFolderId();
   const rootFolderName = getRootFolderName();
 
   const { data: contents, isLoading } = useQuery({
-    queryKey: ['rootContents', user?.accessToken, rootFolderId],
-    queryFn: () => listFolderContents(user!.accessToken, rootFolderId!),
-    enabled: !!user?.accessToken && !!rootFolderId,
+    queryKey: ['rootContents', accessToken, rootFolderId],
+    queryFn: () => listFolderContents(accessToken!, rootFolderId!),
+    enabled: !!accessToken && !!rootFolderId,
   });
 
   const isSingleFile = contents?.files.length === 1;
@@ -29,9 +29,9 @@ export function HomePage() {
   const fileToShow = singleFile || indexFile;
 
   const { data: fileContent } = useQuery({
-    queryKey: ['fileContent', fileToShow?.id, user?.accessToken],
-    queryFn: () => readFile(user!.accessToken, fileToShow!.id),
-    enabled: !!user?.accessToken && !!fileToShow?.id,
+    queryKey: ['fileContent', fileToShow?.id, accessToken],
+    queryFn: () => readFile(accessToken!, fileToShow!.id),
+    enabled: !!accessToken && !!fileToShow?.id,
   });
 
   if (!rootFolderId) {

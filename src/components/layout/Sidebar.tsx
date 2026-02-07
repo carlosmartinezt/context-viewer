@@ -5,14 +5,14 @@ import { listFolders, getRootFolderId, getRootFolderName } from '../../services/
 
 export function Sidebar() {
   const location = useLocation();
-  const { user } = useAuth();
+  const { accessToken } = useAuth();
   const rootFolderId = getRootFolderId();
   const rootFolderName = getRootFolderName();
 
   const { data: folders } = useQuery({
-    queryKey: ['rootFolders', user?.accessToken, rootFolderId],
-    queryFn: () => listFolders(user!.accessToken, rootFolderId!),
-    enabled: !!user?.accessToken && !!rootFolderId,
+    queryKey: ['rootFolders', accessToken, rootFolderId],
+    queryFn: () => listFolders(accessToken!, rootFolderId!),
+    enabled: !!accessToken && !!rootFolderId,
   });
 
   const navLinkClass = (isActive: boolean) =>

@@ -18,15 +18,15 @@ interface MarkdownViewerProps {
 
 export function MarkdownViewer({ content, className = '', files = [], folders = [] }: MarkdownViewerProps) {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { accessToken } = useAuth();
 
   // Handle clicks on unresolved links - resolve path from root and navigate
   const handleUnresolvedLinkClick = async (e: React.MouseEvent, path: string) => {
     e.preventDefault();
-    if (!user?.accessToken) return;
+    if (!accessToken) return;
 
     try {
-      const result = await resolvePathFromRoot(user.accessToken, path);
+      const result = await resolvePathFromRoot(accessToken, path);
       if (result) {
         navigate(result.type === 'file' ? `/file/${result.id}` : `/folder/${result.id}`);
       } else {

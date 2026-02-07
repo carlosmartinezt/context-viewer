@@ -34,13 +34,13 @@ const MoreIcon = () => (
 
 export function BottomNav() {
   const location = useLocation();
-  const { user } = useAuth();
+  const { accessToken } = useAuth();
   const rootFolderId = getRootFolderId();
 
   const { data: folders } = useQuery({
-    queryKey: ['rootFolders', user?.accessToken, rootFolderId],
-    queryFn: () => listFolders(user!.accessToken, rootFolderId!),
-    enabled: !!user?.accessToken && !!rootFolderId,
+    queryKey: ['rootFolders', accessToken, rootFolderId],
+    queryFn: () => listFolders(accessToken!, rootFolderId!),
+    enabled: !!accessToken && !!rootFolderId,
   });
 
   const folderNavItems: NavItem[] = (folders || []).slice(0, MAX_NAV_ITEMS).map((folder) => ({

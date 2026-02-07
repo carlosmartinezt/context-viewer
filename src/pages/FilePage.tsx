@@ -7,23 +7,23 @@ import { FolderNav } from '../components/ui/FolderNav';
 
 export function FilePage() {
   const { fileId } = useParams<{ fileId: string }>();
-  const { user } = useAuth();
+  const { accessToken } = useAuth();
   const navigate = useNavigate();
 
   // Get file metadata to find parent folder
   const { data: fileMeta } = useQuery({
-    queryKey: ['fileMeta', fileId, user?.accessToken],
-    queryFn: () => getFileWithParent(user!.accessToken, fileId!),
-    enabled: !!user?.accessToken && !!fileId,
+    queryKey: ['fileMeta', fileId, accessToken],
+    queryFn: () => getFileWithParent(accessToken!, fileId!),
+    enabled: !!accessToken && !!fileId,
   });
 
   const parentFolderId = fileMeta?.parents?.[0];
 
   // Get sibling files/folders from parent folder
   const { data: siblings } = useQuery({
-    queryKey: ['folderContents', parentFolderId, user?.accessToken],
-    queryFn: () => listFolderContents(user!.accessToken, parentFolderId!),
-    enabled: !!user?.accessToken && !!parentFolderId,
+    queryKey: ['folderContents', parentFolderId, accessToken],
+    queryFn: () => listFolderContents(accessToken!, parentFolderId!),
+    enabled: !!accessToken && !!parentFolderId,
   });
 
   // Exclude current file from siblings
@@ -31,9 +31,9 @@ export function FilePage() {
   const siblingFolders = siblings?.folders || [];
 
   const { data: content, isLoading, error } = useQuery({
-    queryKey: ['file', fileId, user?.accessToken],
-    queryFn: () => readFile(user!.accessToken, fileId!),
-    enabled: !!user?.accessToken && !!fileId,
+    queryKey: ['file', fileId, accessToken],
+    queryFn: () => readFile(accessToken!, fileId!),
+    enabled: !!accessToken && !!fileId,
   });
 
   if (error) {

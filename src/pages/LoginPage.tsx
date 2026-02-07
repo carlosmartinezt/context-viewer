@@ -1,45 +1,41 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { GOOGLE_CLIENT_ID } from '../services/googleAuth';
+import { GOOGLE_CLIENT_ID, waitForGIS } from '../services/googleAuth';
 
 export function LoginPage() {
-  const { signIn, loading, error, user, handleOAuthCallback } = useAuth();
-  const [localError, setLocalError] = useState<string | null>(null);
-  const [processingCallback, setProcessingCallback] = useState(false);
+  const { signIn, loading, error, user, accessToken } = useAuth();
   const navigate = useNavigate();
+  const googleButtonRef = useRef<HTMLDivElement>(null);
 
+  // Redirect once user is authenticated with a token
   useEffect(() => {
-    async function checkCallback() {
-      if (window.location.hash.includes('access_token')) {
-        setProcessingCallback(true);
-        const success = await handleOAuthCallback();
-        setProcessingCallback(false);
-        if (success) {
-          navigate('/', { replace: true });
-        }
-      }
-    }
-    checkCallback();
-  }, [handleOAuthCallback, navigate]);
-
-  useEffect(() => {
-    if (user && !processingCallback) {
+    if (user && accessToken) {
       navigate('/', { replace: true });
     }
-  }, [user, navigate, processingCallback]);
+  }, [user, accessToken, navigate]);
 
-  const handleSignIn = async () => {
-    try {
-      setLocalError(null);
-      await signIn();
-    } catch (err) {
-      setLocalError(err instanceof Error ? err.message : 'Sign in failed');
-    }
-  };
+  // Render GIS sign-in button
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID || !googleButtonRef.current) return;
+
+    let cancelled = false;
+    waitForGIS().then(() => {
+      if (cancelled || !googleButtonRef.current) return;
+      google.accounts.id.renderButton(googleButtonRef.current, {
+        type: 'standard',
+        theme: 'outline',
+        size: 'large',
+        text: 'signin_with',
+        shape: 'rectangular',
+        width: 320,
+      });
+    });
+
+    return () => { cancelled = true; };
+  }, []);
 
   const isConfigured = Boolean(GOOGLE_CLIENT_ID);
-  const isProcessing = loading || processingCallback;
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] flex flex-col items-center justify-center p-6">
@@ -76,15 +72,22 @@ export function LoginPage() {
           </div>
         ) : (
           <>
-            <button
-              onClick={handleSignIn}
-              disabled={isProcessing}
-              className="w-full bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-xl py-4 px-5 flex items-center justify-center gap-3 font-medium text-[var(--color-text)] hover:border-[var(--color-text-tertiary)] hover:shadow-md transition-all disabled:opacity-50"
-            >
-              {isProcessing ? (
+            {loading ? (
+              <div className="flex justify-center">
                 <span className="text-[var(--color-text-secondary)]">Signing in...</span>
-              ) : (
-                <>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* GIS rendered button */}
+                <div className="flex justify-center">
+                  <div ref={googleButtonRef} />
+                </div>
+
+                {/* Fallback custom button */}
+                <button
+                  onClick={signIn}
+                  className="w-full bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-xl py-4 px-5 flex items-center justify-center gap-3 font-medium text-[var(--color-text)] hover:border-[var(--color-text-tertiary)] hover:shadow-md transition-all"
+                >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <path
                       fill="#4285F4"
@@ -104,13 +107,13 @@ export function LoginPage() {
                     />
                   </svg>
                   <span>Sign in with Google</span>
-                </>
-              )}
-            </button>
+                </button>
+              </div>
+            )}
 
-            {(error || localError) && (
+            {error && (
               <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
-                <p className="text-sm text-red-700">{error || localError}</p>
+                <p className="text-sm text-red-700">{error}</p>
               </div>
             )}
 
