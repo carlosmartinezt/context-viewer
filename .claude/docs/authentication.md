@@ -17,7 +17,8 @@ These are decoupled because GIS handles them as separate flows.
 | `src/services/googleAuth.ts` | GIS config, email whitelist, JWT decoding, `waitForGIS()` |
 | `src/services/googleDrive.ts` | Drive API calls, token refresher registration |
 | `src/pages/LoginPage.tsx` | Google sign-in button rendering |
-| `src/pages/SettingsPage.tsx` | Google Picker (needs access token) |
+| `src/pages/SettingsPage.tsx` | Settings, folder picker trigger |
+| `src/components/ui/FolderPicker.tsx` | Custom folder browser modal (needs access token) |
 | `index.html` | Loads GIS script (`accounts.google.com/gsi/client`) |
 
 ## Sign-In Flow
@@ -90,33 +91,46 @@ requestAccessToken('').then((token) => {
 });
 ```
 
-### Problem: "Select Root Folder" Does Nothing on Mobile
+### Problem: "Select Root Folder" Does Nothing / Triggers Unnecessary Consent
 
-**Symptom**: User signs in on mobile, goes to Settings, clicks "Select Root Folder" — nothing happens.
+**Symptom**: User signs in on mobile, goes to Settings, clicks "Select Root Folder" — either nothing happens, or it triggers a Google consent popup even though the user is already signed in.
 
-**Root Cause**: The silent token refresh failed (see above), so `accessToken` is `null`. The `handleSelectFolder()` function had an early return: `if (!accessToken) return;` — silently doing nothing.
+**Root Cause**: The silent token refresh failed (see above), so `accessToken` is `null`. Without a token, the folder picker can't open.
 
-**Fix**: When `accessToken` is null, `handleSelectFolder()` now calls `requestToken('consent')` to trigger a user-facing consent popup. If the user grants access, the picker opens immediately with the new token.
+**Fix**: `handleOpenPicker()` in SettingsPage tries a silent refresh first (2-second timeout), then falls back to consent only if silent refresh fails. This avoids unnecessary consent popups on desktop while still working on mobile.
 
 ```typescript
-const handleSelectFolder = async () => {
-  if (!window.google?.picker) return;
-  if (accessToken) {
-    openPicker(accessToken);
-    return;
+const handleOpenPicker = async () => {
+  if (!accessToken) {
+    const silentToken = await Promise.race([
+      requestToken(''),
+      new Promise<null>(r => setTimeout(() => r(null), 2000)),
+    ]);
+    if (!silentToken) {
+      const token = await requestToken('consent');
+      if (!token) return;
+    }
   }
-  // No token — request with consent popup
-  const token = await requestToken('consent');
-  if (token) openPicker(token);
+  setPickerOpen(true);
 };
 ```
 
-### General Mobile Auth Lesson
+### Problem: Folders Disappear After Selecting Root Folder
 
-On mobile browsers, **never assume silent/invisible auth flows will succeed**. Always:
-1. Add timeouts for silent operations that depend on popups/iframes
-2. Provide fallback paths that trigger explicit user consent
-3. Don't silently fail — either show the UI or request consent
+**Symptom**: User selects a root folder, page reloads, all folders gone.
+
+**Root Cause**: Using `window.location.href = '/'` for a hard reload destroys the in-memory access token. The silent token refresh on reload may fail, leaving no token to fetch folders.
+
+**Fix**: Use React Router `navigate('/')` + `queryClient.invalidateQueries()` instead of a hard reload. This refreshes all data and navigates home while keeping the in-memory token alive.
+
+**Key lesson**: Never do `window.location.href` or `window.location.reload()` in this app — it kills the access token. Always use React Router navigation + React Query invalidation.
+
+### General Auth Lessons
+
+1. **Never assume silent auth flows succeed** (especially on mobile). Always add timeouts and fallback to explicit consent.
+2. **Never hard-reload the page** (`window.location.href`, `window.location.reload()`). The in-memory access token is lost. Use `navigate()` + `queryClient.invalidateQueries()` instead.
+3. **Don't silently fail** — either show the UI or request consent.
+4. **Token acquisition pattern**: Try silent first (with timeout), fall back to consent only if needed.
 
 ## Auth Context API
 
@@ -146,11 +160,14 @@ const ALLOWED_EMAILS = [
 
 Unauthorized users see an "Unauthorized user" error after sign-in.
 
-## Google Picker Integration
+## Custom Folder Picker
 
-The Google Picker (folder selection in Settings) requires:
-1. The `apis.google.com/js/api.js` script loaded dynamically
-2. `gapi.load('picker', callback)` to initialize
-3. A valid access token passed via `.setOAuthToken(token)`
+The Google Picker iframe was replaced with a custom `FolderPicker` component (`src/components/ui/FolderPicker.tsx`).
 
-The Picker script is loaded lazily on the Settings page (not in index.html) since it's only needed there.
+- Full-screen modal on mobile, centered panel on desktop
+- Browsable folder tree starting at "My Drive" (`'root'` as parent ID)
+- Breadcrumb navigation for path history
+- Uses React Query with `listFolders()` — each folder level cached independently
+- Rendered via `createPortal` to avoid z-index issues with header/nav
+- Resets to root on every open
+- `SettingsPage` handles token acquisition before opening the picker

@@ -34,7 +34,7 @@ React 19 + TypeScript + Vite + TailwindCSS v4 + React Query + React Router v7
 ```
 src/
 ├── components/layout/   # Header, BottomNav, Sidebar, Layout
-├── components/ui/       # MarkdownViewer
+├── components/ui/       # MarkdownViewer, FolderPicker, FolderNav, ProfileAvatar
 ├── pages/               # HomePage, FolderPage, FilePage, MorePage, SettingsPage, LoginPage
 ├── services/            # googleAuth, googleDrive
 ├── hooks/               # useAuth
@@ -68,7 +68,7 @@ src/
 |------|-------|
 | OAuth whitelist | `src/services/googleAuth.ts` → `ALLOWED_EMAILS` |
 | Root folder storage | `localStorage` → `context-viewer-root-folder` |
-| Folder picker | `src/pages/SettingsPage.tsx` → Google Picker API |
+| Folder picker | `src/components/ui/FolderPicker.tsx` → custom modal browser |
 | Dynamic nav | `src/components/layout/BottomNav.tsx` |
 
 ## Storage Keys
