@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { GOOGLE_CLIENT_ID, waitForGIS } from '../services/googleAuth';
 
 export function LoginPage() {
-  const { signIn, loading, error, user, accessToken } = useAuth();
+  const { loading, error, user, accessToken } = useAuth();
   const navigate = useNavigate();
   const googleButtonRef = useRef<HTMLDivElement>(null);
 
