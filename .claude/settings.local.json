@@ -25,7 +25,8 @@
       "Bash(gh repo delete:*)",
       "mcp__plugin_playwright_playwright__browser_take_screenshot",
       "mcp__plugin_playwright_playwright__browser_console_messages",
-      "mcp__plugin_playwright_playwright__browser_close"
+      "mcp__plugin_playwright_playwright__browser_close",
+      "mcp__ide__getDiagnostics"
     ]
   }
 }
