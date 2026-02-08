@@ -27,8 +27,8 @@ export function SettingsPage() {
   };
 
   const handleForceRelogin = () => {
-    localStorage.removeItem('context-viewer-user');
-    window.location.reload();
+    signOut();
+    navigate('/');
   };
 
   const handleOpenPicker = async () => {

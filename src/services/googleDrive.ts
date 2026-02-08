@@ -2,14 +2,19 @@
 // Generic folder/file browser - NO PARSING, just raw content
 
 const DRIVE_API_BASE = 'https://www.googleapis.com/drive/v3';
-const STORAGE_KEY = 'context-viewer-user';
 const ROOT_FOLDER_KEY = 'context-viewer-root-folder';
 
 // Token refresh callback, registered by AuthProvider
 let tokenRefresher: (() => Promise<string | null>) | null = null;
+// Session expired callback — clears token state so UI shows reconnect banner
+let sessionExpiredHandler: (() => void) | null = null;
 
 export function setTokenRefresher(fn: () => Promise<string | null>) {
   tokenRefresher = fn;
+}
+
+export function setSessionExpiredHandler(fn: () => void) {
+  sessionExpiredHandler = fn;
 }
 
 // Wrapper that handles expired tokens with silent refresh
@@ -27,17 +32,14 @@ async function driveApiFetch(url: string, accessToken: string): Promise<Response
       });
       if (retry.ok) return retry;
     }
-    // Refresh failed — clear storage and reload to trigger login
-    localStorage.removeItem(STORAGE_KEY);
-    window.location.reload();
-    throw new Error('Session expired. Please sign in again.');
+    // Refresh failed — clear stored token and notify UI
+    sessionExpiredHandler?.();
+    throw new Error('Session expired. Please reconnect.');
   }
 
   if (response.status === 401) {
-    // No refresher registered — fallback to old behavior
-    localStorage.removeItem(STORAGE_KEY);
-    window.location.reload();
-    throw new Error('Session expired. Please sign in again.');
+    sessionExpiredHandler?.();
+    throw new Error('Session expired. Please reconnect.');
   }
 
   return response;

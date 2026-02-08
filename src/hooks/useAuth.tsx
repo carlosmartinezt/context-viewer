@@ -15,7 +15,7 @@ import {
   GOOGLE_CLIENT_ID,
   SCOPES,
 } from '../services/googleAuth';
-import { setTokenRefresher } from '../services/googleDrive';
+import { setTokenRefresher, setSessionExpiredHandler } from '../services/googleDrive';
 
 interface AuthContextType {
   user: GoogleUser | null;
@@ -30,6 +30,32 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 const STORAGE_KEY = 'context-viewer-user';
+const TOKEN_KEY = 'context-viewer-access-token';
+const TOKEN_EXPIRY_KEY = 'context-viewer-token-expiry';
+
+// Persist token + expiry to localStorage
+function storeToken(token: string, expiresIn: number) {
+  const expiresAt = Date.now() + expiresIn * 1000;
+  localStorage.setItem(TOKEN_KEY, token);
+  localStorage.setItem(TOKEN_EXPIRY_KEY, String(expiresAt));
+}
+
+// Restore token from localStorage if still valid (with 60s buffer)
+function restoreToken(): string | null {
+  const token = localStorage.getItem(TOKEN_KEY);
+  const expiry = localStorage.getItem(TOKEN_EXPIRY_KEY);
+  if (token && expiry && Date.now() < Number(expiry) - 60_000) {
+    return token;
+  }
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(TOKEN_EXPIRY_KEY);
+  return null;
+}
+
+function clearStoredToken() {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(TOKEN_EXPIRY_KEY);
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<GoogleUser | null>(null);
@@ -40,6 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const tokenClientRef = useRef<google.accounts.oauth2.TokenClient | null>(null);
   // Promise-based deduplication for token refresh
   const refreshPromiseRef = useRef<Promise<string | null> | null>(null);
+  const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Request an access token via GIS token client (silent or with consent)
   const requestAccessToken = useCallback((prompt?: string): Promise<string | null> => {
@@ -61,6 +88,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Callback ref for token client response
   const tokenCallbackRef = useRef<((token: string | null) => void) | null>(null);
 
+  // Schedule a proactive token refresh before expiry
+  const scheduleRefresh = useCallback((expiresIn: number) => {
+    if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+    // Refresh 5 minutes before expiry, or at half-life if token is short-lived
+    const refreshIn = Math.max((expiresIn - 300) * 1000, (expiresIn / 2) * 1000);
+    refreshTimerRef.current = setTimeout(() => {
+      requestAccessToken('').then((token) => {
+        if (token) setAccessToken(token);
+      });
+    }, refreshIn);
+  }, [requestAccessToken]);
+
   // Refresh access token with deduplication
   const refreshAccessToken = useCallback((): Promise<string | null> => {
     if (refreshPromiseRef.current) return refreshPromiseRef.current;
@@ -75,9 +114,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return promise;
   }, [requestAccessToken]);
 
-  // Register the refresher with googleDrive.ts
+  // Register the refresher and session-expired handler with googleDrive.ts
   useEffect(() => {
     setTokenRefresher(refreshAccessToken);
+    setSessionExpiredHandler(() => {
+      setAccessToken(null);
+      clearStoredToken();
+    });
   }, [refreshAccessToken]);
 
   // Initialize GIS on mount
@@ -132,6 +175,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               return;
             }
             setAccessToken(response.access_token);
+            storeToken(response.access_token, response.expires_in);
+            scheduleRefresh(response.expires_in);
             tokenCallbackRef.current?.(response.access_token);
           },
           error_callback: () => {
@@ -139,15 +184,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           },
         });
 
-        // If user is already stored, try silent token refresh
+        // If user is already stored, try restoring persisted token first
         if (stored) {
-          // Timeout: if silent refresh doesn't complete in 3s (e.g. popup blocked on mobile), stop loading anyway
-          const timeout = setTimeout(() => setLoading(false), 3000);
-          requestAccessToken('').then((token) => {
-            clearTimeout(timeout);
-            if (token) setAccessToken(token);
+          const restoredToken = restoreToken();
+          if (restoredToken) {
+            setAccessToken(restoredToken);
+            // Schedule refresh based on remaining time
+            const expiry = Number(localStorage.getItem(TOKEN_EXPIRY_KEY));
+            const remaining = Math.max(0, Math.floor((expiry - Date.now()) / 1000));
+            scheduleRefresh(remaining);
             setLoading(false);
-          });
+          } else {
+            // No valid stored token — try silent refresh
+            const timeout = setTimeout(() => setLoading(false), 3000);
+            requestAccessToken('').then((token) => {
+              clearTimeout(timeout);
+              if (token) setAccessToken(token);
+              setLoading(false);
+            });
+          }
         } else {
           setLoading(false);
         }
@@ -175,7 +230,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(() => {
     setUser(null);
     setAccessToken(null);
+    clearStoredToken();
     localStorage.removeItem(STORAGE_KEY);
+    if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
     google.accounts.id.disableAutoSelect();
   }, []);
 
