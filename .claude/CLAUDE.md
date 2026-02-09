@@ -21,7 +21,7 @@ npm run dev      # Dev server (localhost:5173)
 npm run build    # TypeScript check + production build
 npm run lint     # ESLint
 
-# Deploy
+# Deploy (vercel is NOT installed globally — always use npx)
 npx vercel --prod
 ```
 
