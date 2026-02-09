@@ -5,7 +5,7 @@
 The app uses **Google Identity Services (GIS)** for authentication. There are two separate concerns:
 
 1. **Identity** (who the user is) — persisted in localStorage
-2. **Access Token** (permission to call Google Drive API) — in-memory only, never persisted
+2. **Access Token** (permission to call Google Drive API) — persisted in localStorage with expiry
 
 These are decoupled because GIS handles them as separate flows.
 
@@ -43,11 +43,11 @@ User clicks Google button
 - Survives page refreshes and app restarts
 - Cleared only on explicit sign-out
 
-### Access Token (Short-lived, In-Memory)
+### Access Token (Short-lived, Persisted)
 - Held in React state via `useState` in AuthProvider
-- Never written to localStorage or cookies
-- Required for all Google Drive API calls and the Google Picker
-- Lost on every page refresh — must be re-acquired
+- Also persisted to localStorage (`context-viewer-access-token` + `context-viewer-token-expiry`) so it survives page refreshes within its validity window (~1 hour)
+- Required for all Google Drive API calls
+- On page load, `restoreToken()` checks localStorage — if the token exists and hasn't expired (with 60s buffer), it's restored immediately without any GIS calls
 
 ### Token Refresh Mechanism
 - `driveApiFetch()` in googleDrive.ts detects 401 responses
@@ -55,6 +55,8 @@ User clicks Google button
 - `refreshAccessToken()` in useAuth.tsx handles deduplication via `refreshPromiseRef`
 - Silent refresh uses `requestAccessToken({ prompt: '' })` — no user interaction
 - If silent refresh fails, functions that need a token can call `requestToken('consent')` to trigger a popup
+- **Proactive refresh**: `scheduleRefresh()` sets a timer to refresh the token 5 minutes before expiry (or at half-life for short-lived tokens), preventing mid-session expirations
+- **Session expired handler**: When `driveApiFetch()` gets a 401 and silent refresh fails, the `sessionExpiredHandler` automatically tries consent-based refresh before showing the reconnect banner
 
 ## Returning User Flow (Page Refresh)
 
@@ -66,11 +68,18 @@ Page loads
   → waitForGIS() waits for script
   → google.accounts.id.initialize() with auto_select: true
   → initTokenClient() for Drive scopes
-  → Silent token refresh attempted: requestAccessToken('')
-  → If succeeds: setAccessToken(), setLoading(false)
-  → If fails (timeout after 3s): setLoading(false) anyway
-  → User sees the app, may need to re-consent for token on next action
+  → restoreToken() checks localStorage for a non-expired token
+  → If valid token found: setAccessToken(), scheduleRefresh(), setLoading(false) — DONE
+  → If no valid token:
+    → Silent refresh attempted: requestAccessToken('')
+    → If succeeds: setAccessToken(), setLoading(false) — DONE
+    → If fails (timeout after 3s):
+      → Falls back to requestAccessToken('consent') — shows Google popup
+      → If succeeds: setAccessToken(), setLoading(false)
+      → If fails: setLoading(false), user sees reconnect banner
 ```
+
+**Key**: The consent fallback ensures the user almost never sees the "Session expired" banner. The only case where it appears is if the user actively dismisses the Google consent popup.
 
 ## Mobile-Specific Issues & Fixes
 
@@ -80,14 +89,22 @@ Page loads
 
 **Root Cause**: GIS's `requestAccessToken({ prompt: '' })` opens a hidden popup/iframe for silent token refresh. Mobile browsers (especially Safari) block these third-party popups. Neither the success callback nor error_callback fires, so the Promise never resolves.
 
-**Fix**: Added a 3-second timeout in useAuth.tsx. If the silent refresh doesn't complete, `setLoading(false)` fires anyway so the UI becomes interactive.
+**Fix**: Added a 3-second timeout in useAuth.tsx. If the silent refresh doesn't complete, it falls back to consent-based refresh (shows a Google popup). This ensures the user gets a token instead of seeing a dead banner.
 
 ```typescript
 const timeout = setTimeout(() => setLoading(false), 3000);
 requestAccessToken('').then((token) => {
   clearTimeout(timeout);
-  if (token) setAccessToken(token);
-  setLoading(false);
+  if (token) {
+    setAccessToken(token);
+    setLoading(false);
+  } else {
+    // Silent refresh failed — fall back to consent
+    requestAccessToken('consent').then((consentToken) => {
+      if (consentToken) setAccessToken(consentToken);
+      setLoading(false);
+    });
+  }
 });
 ```
 
@@ -128,9 +145,11 @@ const handleOpenPicker = async () => {
 ### General Auth Lessons
 
 1. **Never assume silent auth flows succeed** (especially on mobile). Always add timeouts and fallback to explicit consent.
-2. **Never hard-reload the page** (`window.location.href`, `window.location.reload()`). The in-memory access token is lost. Use `navigate()` + `queryClient.invalidateQueries()` instead.
+2. **Never hard-reload the page** (`window.location.href`, `window.location.reload()`). Use `navigate()` + `queryClient.invalidateQueries()` instead.
 3. **Don't silently fail** — either show the UI or request consent.
 4. **Token acquisition pattern**: Try silent first (with timeout), fall back to consent only if needed.
+5. **Always persist tokens to localStorage** with an expiry timestamp. Restoring a valid token on page load avoids GIS calls entirely and is the fastest path to a working session.
+6. **The "Session expired" banner should be a last resort**, not the default when silent refresh fails. Always try consent-based refresh before showing the banner.
 
 ## Auth Context API
 

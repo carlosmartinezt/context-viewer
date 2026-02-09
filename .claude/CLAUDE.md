@@ -73,7 +73,9 @@ src/
 
 ## Storage Keys
 
-- `context-viewer-user` - Google user identity (email, name, picture) — no access token
+- `context-viewer-user` - Google user identity (email, name, picture)
+- `context-viewer-access-token` - Google Drive access token (short-lived, ~1 hour)
+- `context-viewer-token-expiry` - Token expiry timestamp (ms since epoch)
 - `context-viewer-root-folder` - Selected root folder ID
 - `context-viewer-root-folder-name` - Selected root folder name
 
@@ -82,12 +84,12 @@ src/
 See [`.claude/docs/authentication.md`](.claude/docs/authentication.md) for full details.
 
 - **Identity** (`GoogleUser`): email, name, picture — persisted in localStorage, lasts until sign-out
-- **Access token**: held in-memory (React state), never persisted — refreshed silently via GIS `requestAccessToken({ prompt: '' })`
+- **Access token**: held in React state + persisted to localStorage (`context-viewer-access-token` + `context-viewer-token-expiry`). Restored on page load if still valid (~1 hour lifetime).
 - **Sign-in flow**: GIS `google.accounts.id.initialize()` + `renderButton()` → ID token JWT → `decodeIdToken()` → validate whitelist → store identity → request access token via `google.accounts.oauth2.initTokenClient()`
-- **Token refresh**: `driveApiFetch()` detects 401 → calls registered `tokenRefresher` → silent `requestAccessToken` → retries request
+- **Token refresh strategy**: Restore from localStorage → silent GIS refresh → consent popup fallback → reconnect banner (last resort). Proactive refresh scheduled 5 minutes before expiry.
+- **Session expired handler**: On 401 after silent refresh fails, automatically tries consent before showing banner.
 - **GIS script**: loaded via `<script>` in `index.html`, types declared in `src/types/google.accounts.d.ts`
-- Settings page has "Force Re-login" button for manual refresh
-- **Mobile gotcha**: Silent token refresh (`prompt: ''`) gets blocked on mobile browsers. A 3-second timeout ensures UI still loads. Actions requiring a token (like folder picker) fall back to `requestToken('consent')` to trigger explicit consent.
+- **Mobile gotcha**: Silent token refresh (`prompt: ''`) gets blocked on mobile browsers. A 3-second timeout triggers consent-based fallback (`requestToken('consent')`). Actions requiring a token (like folder picker) also fall back to consent.
 
 ## Markdown Link Resolution
 

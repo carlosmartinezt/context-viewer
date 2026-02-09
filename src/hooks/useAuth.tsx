@@ -118,10 +118,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setTokenRefresher(refreshAccessToken);
     setSessionExpiredHandler(() => {
-      setAccessToken(null);
       clearStoredToken();
+      // Try consent-based refresh before showing the banner
+      requestAccessToken('consent').then((token) => {
+        if (token) {
+          setAccessToken(token);
+        } else {
+          setAccessToken(null);
+        }
+      });
     });
-  }, [refreshAccessToken]);
+  }, [refreshAccessToken, requestAccessToken]);
 
   // Initialize GIS on mount
   useEffect(() => {
@@ -195,12 +202,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             scheduleRefresh(remaining);
             setLoading(false);
           } else {
-            // No valid stored token — try silent refresh
+            // No valid stored token — try silent refresh, then fall back to consent
             const timeout = setTimeout(() => setLoading(false), 3000);
             requestAccessToken('').then((token) => {
               clearTimeout(timeout);
-              if (token) setAccessToken(token);
-              setLoading(false);
+              if (token) {
+                setAccessToken(token);
+                setLoading(false);
+              } else {
+                // Silent refresh failed (common on mobile) — fall back to consent
+                requestAccessToken('consent').then((consentToken) => {
+                  if (consentToken) setAccessToken(consentToken);
+                  setLoading(false);
+                });
+              }
             });
           }
         } else {
