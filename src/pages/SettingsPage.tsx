@@ -21,29 +21,39 @@ export function SettingsPage() {
   const navigate = useNavigate();
   const [rootFolderName, setRootFolderName] = useState<string | null>(getRootFolderName());
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [pendingPicker, setPendingPicker] = useState(false);
+
+  // Open picker once we get a token after requesting one
+  useEffect(() => {
+    if (pendingPicker && accessToken) {
+      setPendingPicker(false);
+      setPickerOpen(true);
+    }
+  }, [pendingPicker, accessToken]);
 
   const handleForceRefresh = () => {
     queryClient.invalidateQueries();
   };
 
-  const handleForceRelogin = () => {
-    signOut();
-    navigate('/');
+  const handleForceRelogin = async () => {
+    await signOut();
+    navigate('/login');
   };
 
   const handleOpenPicker = async () => {
-    if (!accessToken) {
-      // Try silent refresh with timeout, fall back to consent if blocked (e.g. mobile)
-      const silentToken = await Promise.race([
-        requestToken(''),
-        new Promise<null>(r => setTimeout(() => r(null), 2000)),
-      ]);
-      if (!silentToken) {
-        const token = await requestToken('consent');
-        if (!token) return;
-      }
+    if (accessToken) {
+      setPickerOpen(true);
+      return;
     }
-    setPickerOpen(true);
+    // Try server-side refresh first
+    const token = await requestToken('');
+    if (token) {
+      setPickerOpen(true);
+      return;
+    }
+    // Fall back to code flow popup
+    setPendingPicker(true);
+    requestToken('consent');
   };
 
   const handleFolderSelected = (folder: DriveFolder) => {

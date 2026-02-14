@@ -13,7 +13,12 @@ export function Layout() {
   const handleReconnect = async () => {
     setReconnecting(true);
     try {
-      await requestToken('consent');
+      // Try server-side refresh first (no popup)
+      const token = await requestToken('');
+      if (!token) {
+        // Fall back to code flow popup
+        await requestToken('consent');
+      }
     } finally {
       setReconnecting(false);
     }

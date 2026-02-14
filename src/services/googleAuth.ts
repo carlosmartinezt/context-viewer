@@ -1,18 +1,14 @@
 // Google OAuth configuration - GIS (Google Identity Services)
 export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
-// Scopes needed for Google Drive access
+// Scopes needed for Google Drive access + OpenID for code flow id_token
 export const SCOPES = [
+  'openid',
+  'email',
+  'profile',
   'https://www.googleapis.com/auth/drive.file',
   'https://www.googleapis.com/auth/drive.readonly',
 ].join(' ');
-
-// Allowed email addresses (whitelist)
-const ALLOWED_EMAILS = [
-  'carlosmartinezt@gmail.com',
-  'lisvette.villar@gmail.com',
-  'cjmartinez@meta.com',
-];
 
 // Identity only — no access token stored here
 export interface GoogleUser {
@@ -21,21 +17,16 @@ export interface GoogleUser {
   picture: string;
 }
 
-// Check if user is authorized
+// Check if user is authorized (kept for client-side pre-check; server also validates)
 export function isAuthorizedUser(email: string): boolean {
+  const ALLOWED_EMAILS = [
+    'carlosmartinezt@gmail.com',
+    'lisvette.villar@gmail.com',
+    'cjmartinez@meta.com',
+  ];
   return ALLOWED_EMAILS.some(
     (allowed) => allowed.toLowerCase() === email.toLowerCase()
   );
-}
-
-// Decode the JWT ID token from GIS sign-in to extract user info
-export function decodeIdToken(credential: string): GoogleUser {
-  const payload = JSON.parse(atob(credential.split('.')[1]));
-  return {
-    email: payload.email,
-    name: payload.name,
-    picture: payload.picture,
-  };
 }
 
 // Wait for the GIS script to load

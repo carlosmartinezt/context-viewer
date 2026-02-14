@@ -6,15 +6,9 @@ const ROOT_FOLDER_KEY = 'context-viewer-root-folder';
 
 // Token refresh callback, registered by AuthProvider
 let tokenRefresher: (() => Promise<string | null>) | null = null;
-// Session expired callback — clears token state so UI shows reconnect banner
-let sessionExpiredHandler: (() => void) | null = null;
 
 export function setTokenRefresher(fn: () => Promise<string | null>) {
   tokenRefresher = fn;
-}
-
-export function setSessionExpiredHandler(fn: () => void) {
-  sessionExpiredHandler = fn;
 }
 
 // Wrapper that handles expired tokens with silent refresh
@@ -32,14 +26,12 @@ async function driveApiFetch(url: string, accessToken: string): Promise<Response
       });
       if (retry.ok) return retry;
     }
-    // Refresh failed — clear stored token and notify UI
-    sessionExpiredHandler?.();
-    throw new Error('Session expired. Please reconnect.');
+    // Refresh failed — let React Query error handling + Layout reconnect banner handle it
+    throw new Error('Session expired');
   }
 
   if (response.status === 401) {
-    sessionExpiredHandler?.();
-    throw new Error('Session expired. Please reconnect.');
+    throw new Error('Session expired');
   }
 
   return response;

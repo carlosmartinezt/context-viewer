@@ -39,6 +39,8 @@ src/
 ├── services/            # googleAuth, googleDrive
 ├── hooks/               # useAuth
 ├── types/               # User type, GIS type declarations
+api/
+├── auth/                # Vercel serverless functions (_utils, exchange, refresh, revoke)
 .claude/
 ├── docs/                # Application design docs
 └── CLAUDE.md            # This file - AI context and instructions
@@ -73,23 +75,23 @@ src/
 
 ## Storage Keys
 
-- `context-viewer-user` - Google user identity (email, name, picture)
-- `context-viewer-access-token` - Google Drive access token (short-lived, ~1 hour)
-- `context-viewer-token-expiry` - Token expiry timestamp (ms since epoch)
+- `context-viewer-user` - Google user identity (email, name, picture) — no access token
 - `context-viewer-root-folder` - Selected root folder ID
 - `context-viewer-root-folder-name` - Selected root folder name
 
-## Auth Architecture (GIS)
+## Auth Architecture (GIS Authorization Code Flow)
 
 See [`.claude/docs/authentication.md`](.claude/docs/authentication.md) for full details.
 
 - **Identity** (`GoogleUser`): email, name, picture — persisted in localStorage, lasts until sign-out
-- **Access token**: held in React state + persisted to localStorage (`context-viewer-access-token` + `context-viewer-token-expiry`). Restored on page load if still valid (~1 hour lifetime).
-- **Sign-in flow**: GIS `google.accounts.id.initialize()` + `renderButton()` → ID token JWT → `decodeIdToken()` → validate whitelist → store identity → request access token via `google.accounts.oauth2.initTokenClient()`
-- **Token refresh strategy**: Restore from localStorage → silent GIS refresh → consent popup fallback → reconnect banner (last resort). Proactive refresh scheduled 5 minutes before expiry.
-- **Session expired handler**: On 401 after silent refresh fails, automatically tries consent before showing banner.
+- **Access token**: held in-memory (React state), never persisted — refreshed via server-side HTTP-only cookie
+- **Refresh token**: stored as HTTP-only cookie (`auth_refresh_token`, 7 days) — set by `/api/auth/exchange`, used by `/api/auth/refresh`
+- **Sign-in flow**: GIS `initCodeClient()` → popup → auth code → `POST /api/auth/exchange` → server exchanges for tokens → sets refresh cookie → returns access_token + user info
+- **Token refresh**: `driveApiFetch()` detects 401 → calls `POST /api/auth/refresh` (reads cookie) → returns new access_token
 - **GIS script**: loaded via `<script>` in `index.html`, types declared in `src/types/google.accounts.d.ts`
-- **Mobile gotcha**: Silent token refresh (`prompt: ''`) gets blocked on mobile browsers. A 3-second timeout triggers consent-based fallback (`requestToken('consent')`). Actions requiring a token (like folder picker) also fall back to consent.
+- **Serverless functions**: `api/auth/exchange.ts`, `api/auth/refresh.ts`, `api/auth/revoke.ts` (Vercel)
+- **Environment vars**: `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` must be set in Vercel env vars
+- **Local dev**: `npm run dev` + `npx vercel dev --listen 3000` in separate terminals; Vite proxies `/api` to port 3000
 
 ## Markdown Link Resolution
 

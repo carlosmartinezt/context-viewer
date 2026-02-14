@@ -9,13 +9,11 @@ import {
 } from 'react';
 import {
   type GoogleUser,
-  decodeIdToken,
-  isAuthorizedUser,
   waitForGIS,
   GOOGLE_CLIENT_ID,
   SCOPES,
 } from '../services/googleAuth';
-import { setTokenRefresher, setSessionExpiredHandler } from '../services/googleDrive';
+import { setTokenRefresher } from '../services/googleDrive';
 
 interface AuthContextType {
   user: GoogleUser | null;
@@ -30,32 +28,6 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 const STORAGE_KEY = 'context-viewer-user';
-const TOKEN_KEY = 'context-viewer-access-token';
-const TOKEN_EXPIRY_KEY = 'context-viewer-token-expiry';
-
-// Persist token + expiry to localStorage
-function storeToken(token: string, expiresIn: number) {
-  const expiresAt = Date.now() + expiresIn * 1000;
-  localStorage.setItem(TOKEN_KEY, token);
-  localStorage.setItem(TOKEN_EXPIRY_KEY, String(expiresAt));
-}
-
-// Restore token from localStorage if still valid (with 60s buffer)
-function restoreToken(): string | null {
-  const token = localStorage.getItem(TOKEN_KEY);
-  const expiry = localStorage.getItem(TOKEN_EXPIRY_KEY);
-  if (token && expiry && Date.now() < Number(expiry) - 60_000) {
-    return token;
-  }
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(TOKEN_EXPIRY_KEY);
-  return null;
-}
-
-function clearStoredToken() {
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(TOKEN_EXPIRY_KEY);
-}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<GoogleUser | null>(null);
@@ -63,74 +35,88 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const tokenClientRef = useRef<google.accounts.oauth2.TokenClient | null>(null);
+  const codeClientRef = useRef<google.accounts.oauth2.CodeClient | null>(null);
   // Promise-based deduplication for token refresh
   const refreshPromiseRef = useRef<Promise<string | null> | null>(null);
-  const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Resolve callback for the code flow popup
+  const codeCallbackRef = useRef<((result: { token: string; user: GoogleUser } | null) => void) | null>(null);
 
-  // Request an access token via GIS token client (silent or with consent)
-  const requestAccessToken = useCallback((prompt?: string): Promise<string | null> => {
-    return new Promise((resolve) => {
-      if (!tokenClientRef.current) {
-        resolve(null);
-        return;
+  // Exchange auth code with server for tokens
+  const exchangeCode = useCallback(async (code: string): Promise<{ access_token: string; user: GoogleUser } | null> => {
+    try {
+      const res = await fetch('/api/auth/exchange', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ code }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Exchange failed');
       }
-
-      // Store the resolve on the ref so the callback can call it
-      tokenCallbackRef.current = (token: string | null) => {
-        resolve(token);
-      };
-
-      tokenClientRef.current.requestAccessToken({ prompt: prompt ?? '' });
-    });
+      return await res.json();
+    } catch (err) {
+      console.error('Code exchange error:', err);
+      return null;
+    }
   }, []);
 
-  // Callback ref for token client response
-  const tokenCallbackRef = useRef<((token: string | null) => void) | null>(null);
-
-  // Schedule a proactive token refresh before expiry
-  const scheduleRefresh = useCallback((expiresIn: number) => {
-    if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
-    // Refresh 5 minutes before expiry, or at half-life if token is short-lived
-    const refreshIn = Math.max((expiresIn - 300) * 1000, (expiresIn / 2) * 1000);
-    refreshTimerRef.current = setTimeout(() => {
-      requestAccessToken('').then((token) => {
-        if (token) setAccessToken(token);
-      });
-    }, refreshIn);
-  }, [requestAccessToken]);
-
-  // Refresh access token with deduplication
+  // Refresh access token via server (reads HTTP-only cookie)
   const refreshAccessToken = useCallback((): Promise<string | null> => {
     if (refreshPromiseRef.current) return refreshPromiseRef.current;
 
-    const promise = requestAccessToken('').then((token) => {
-      refreshPromiseRef.current = null;
-      if (token) setAccessToken(token);
-      return token;
-    });
+    const promise = (async () => {
+      try {
+        const res = await fetch('/api/auth/refresh', {
+          method: 'POST',
+          credentials: 'include',
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        const token = data.access_token as string;
+        setAccessToken(token);
+        return token;
+      } catch {
+        return null;
+      } finally {
+        refreshPromiseRef.current = null;
+      }
+    })();
 
     refreshPromiseRef.current = promise;
     return promise;
-  }, [requestAccessToken]);
+  }, []);
 
-  // Register the refresher and session-expired handler with googleDrive.ts
+  // requestToken: '' → server refresh; 'consent' → code flow popup
+  const requestToken = useCallback(async (prompt?: string): Promise<string | null> => {
+    if (!prompt || prompt === '') {
+      // Silent server-side refresh
+      return refreshAccessToken();
+    }
+
+    // Consent / popup flow — trigger code client
+    return new Promise((resolve) => {
+      if (!codeClientRef.current) {
+        resolve(null);
+        return;
+      }
+      codeCallbackRef.current = (result) => {
+        if (result) {
+          resolve(result.token);
+        } else {
+          resolve(null);
+        }
+      };
+      codeClientRef.current.requestCode();
+    });
+  }, [refreshAccessToken]);
+
+  // Register the refresher with googleDrive.ts
   useEffect(() => {
     setTokenRefresher(refreshAccessToken);
-    setSessionExpiredHandler(() => {
-      clearStoredToken();
-      // Try consent-based refresh before showing the banner
-      requestAccessToken('consent').then((token) => {
-        if (token) {
-          setAccessToken(token);
-        } else {
-          setAccessToken(null);
-        }
-      });
-    });
-  }, [refreshAccessToken, requestAccessToken]);
+  }, [refreshAccessToken]);
 
-  // Initialize GIS on mount
+  // Initialize GIS code client on mount
   useEffect(() => {
     async function init() {
       // Restore identity from localStorage
@@ -151,76 +137,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         await waitForGIS();
 
-        // Initialize GIS ID (sign-in with Google)
-        google.accounts.id.initialize({
-          client_id: GOOGLE_CLIENT_ID,
-          callback: (response) => {
-            const decoded = decodeIdToken(response.credential);
-            if (!isAuthorizedUser(decoded.email)) {
-              setError('Unauthorized user');
-              return;
-            }
-            setUser(decoded);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(decoded));
-            setError(null);
-
-            // After sign-in, request an access token for Drive
-            requestAccessToken('consent').then((token) => {
-              if (token) setAccessToken(token);
-            });
-          },
-          auto_select: true,
-        });
-
-        // Initialize token client for Drive scopes
-        tokenClientRef.current = google.accounts.oauth2.initTokenClient({
+        // Initialize code client for auth code flow
+        codeClientRef.current = google.accounts.oauth2.initCodeClient({
           client_id: GOOGLE_CLIENT_ID,
           scope: SCOPES,
-          callback: (response) => {
+          ux_mode: 'popup',
+          callback: async (response) => {
             if (response.error) {
-              tokenCallbackRef.current?.(null);
+              console.error('Code flow error:', response.error);
+              setError(response.error_description || response.error);
+              codeCallbackRef.current?.(null);
               return;
             }
-            setAccessToken(response.access_token);
-            storeToken(response.access_token, response.expires_in);
-            scheduleRefresh(response.expires_in);
-            tokenCallbackRef.current?.(response.access_token);
+
+            const result = await exchangeCode(response.code);
+            if (!result) {
+              setError('Sign-in failed');
+              codeCallbackRef.current?.(null);
+              return;
+            }
+
+            setUser(result.user);
+            setAccessToken(result.access_token);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(result.user));
+            setError(null);
+            codeCallbackRef.current?.({ token: result.access_token, user: result.user });
           },
           error_callback: () => {
-            tokenCallbackRef.current?.(null);
+            codeCallbackRef.current?.(null);
           },
         });
 
-        // If user is already stored, try restoring persisted token first
+        // If user is already stored, try silent server-side refresh (no popup)
         if (stored) {
-          const restoredToken = restoreToken();
-          if (restoredToken) {
-            setAccessToken(restoredToken);
-            // Schedule refresh based on remaining time
-            const expiry = Number(localStorage.getItem(TOKEN_EXPIRY_KEY));
-            const remaining = Math.max(0, Math.floor((expiry - Date.now()) / 1000));
-            scheduleRefresh(remaining);
-            setLoading(false);
-          } else {
-            // No valid stored token — try silent refresh, then fall back to consent
-            const timeout = setTimeout(() => setLoading(false), 3000);
-            requestAccessToken('').then((token) => {
-              clearTimeout(timeout);
-              if (token) {
-                setAccessToken(token);
-                setLoading(false);
-              } else {
-                // Silent refresh failed (common on mobile) — fall back to consent
-                requestAccessToken('consent').then((consentToken) => {
-                  if (consentToken) setAccessToken(consentToken);
-                  setLoading(false);
-                });
-              }
-            });
+          const token = await refreshAccessToken();
+          if (token) {
+            setAccessToken(token);
           }
-        } else {
-          setLoading(false);
         }
+
+        setLoading(false);
       } catch (err) {
         console.error('GIS init error:', err);
         setError(err instanceof Error ? err.message : 'Authentication failed');
@@ -234,20 +190,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(() => {
     setError(null);
-    google.accounts.id.prompt((notification) => {
-      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-        // Prompt didn't show — request token directly (triggers consent)
-        requestAccessToken('consent');
-      }
-    });
-  }, [requestAccessToken]);
+    if (codeClientRef.current) {
+      codeClientRef.current.requestCode();
+    }
+  }, []);
 
-  const signOut = useCallback(() => {
+  const signOut = useCallback(async () => {
     setUser(null);
     setAccessToken(null);
-    clearStoredToken();
     localStorage.removeItem(STORAGE_KEY);
-    if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+    try {
+      await fetch('/api/auth/revoke', {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch {
+      // Best effort — cookie gets cleared server-side
+    }
     google.accounts.id.disableAutoSelect();
   }, []);
 
@@ -260,7 +219,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signIn,
         signOut,
         accessToken,
-        requestToken: requestAccessToken,
+        requestToken,
       }}
     >
       {children}
