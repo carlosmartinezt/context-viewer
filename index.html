@@ -2,9 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="google-site-verification" content="TAlYQrqVxlX_4cOjZbLos0Cy7km9_P0hQ8GFMR0sR0Q" />
     <title>Context Viewer</title>
+    <meta name="application-name" content="Context Viewer" />
+    <meta name="description" content="Context Viewer is a read-only Google Drive browser for viewing and navigating your markdown files. Browse folder structures and render markdown documents directly from your Drive." />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
@@ -20,6 +23,16 @@
         if (isDark) document.documentElement.setAttribute('data-theme', 'dark');
       })();
     </script>
+    <!-- Static content for crawlers — visually hidden but remains in DOM -->
+    <div id="static-landing" style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden;">
+      <h1>Context Viewer</h1>
+      <p>Context Viewer is a read-only Google Drive browser for viewing and navigating your markdown files.</p>
+      <p>Sign in with your Google account to browse folders and render markdown files directly from your Drive.</p>
+      <nav>
+        <a href="https://context-viewer.vercel.app/privacy">Privacy Policy</a>
+        <a href="https://context-viewer.vercel.app/terms">Terms of Service</a>
+      </nav>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

@@ -8,6 +8,9 @@ import { SettingsPage } from './pages/SettingsPage';
 import { MorePage } from './pages/MorePage';
 import { FilePage } from './pages/FilePage';
 import { LoginPage } from './pages/LoginPage';
+import { PrivacyPage } from './pages/PrivacyPage';
+import { TermsPage } from './pages/TermsPage';
+import { AboutPage } from './pages/AboutPage';
 
 const queryClient = new QueryClient();
 
@@ -27,7 +30,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <LoginPage />;
   }
 
   return <>{children}</>;
@@ -42,6 +45,9 @@ function AppRoutes() {
         path="/login"
         element={user ? <Navigate to="/" replace /> : <LoginPage />}
       />
+      <Route path="/about" element={<AboutPage />} />
+      <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/terms" element={<TermsPage />} />
       <Route
         path="/"
         element={

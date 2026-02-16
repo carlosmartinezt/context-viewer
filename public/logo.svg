@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <!-- Colorful arc gradient segments -->
+    <linearGradient id="arc1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#EF4444"/>
+    </linearGradient>
+    <linearGradient id="arc2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="arc3" x1="100%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#22C55E"/>
+      <stop offset="100%" stop-color="#16A34A"/>
+    </linearGradient>
+    <linearGradient id="arc4" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#8B5CF6"/>
+      <stop offset="100%" stop-color="#7C3AED"/>
+    </linearGradient>
+    <!-- Document shadow -->
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="2" dy="4" stdDeviation="8" flood-opacity="0.25"/>
+    </filter>
+    <filter id="shadow-sm" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+
+  <!-- Colorful circular arc (outer ring) -->
+  <!-- Top arc - orange/red -->
+  <path d="M 256 52 A 204 204 0 0 1 430 150" stroke="url(#arc1)" stroke-width="28" fill="none" stroke-linecap="round"/>
+  <!-- Right arc - blue -->
+  <path d="M 440 170 A 204 204 0 0 1 400 390" stroke="url(#arc2)" stroke-width="28" fill="none" stroke-linecap="round"/>
+  <!-- Bottom arc - purple -->
+  <path d="M 385 405 A 204 204 0 0 1 150 430" stroke="url(#arc4)" stroke-width="28" fill="none" stroke-linecap="round"/>
+  <!-- Left arc - green -->
+  <path d="M 130 420 A 204 204 0 0 1 80 150" stroke="url(#arc3)" stroke-width="28" fill="none" stroke-linecap="round"/>
+
+  <!-- Document pages (back) -->
+  <g filter="url(#shadow)">
+    <rect x="148" y="108" width="200" height="250" rx="8" fill="#E8EDF2" transform="rotate(5, 248, 233)"/>
+  </g>
+
+  <!-- Document page (front) -->
+  <g filter="url(#shadow)">
+    <rect x="130" y="100" width="200" height="250" rx="8" fill="white"/>
+    <!-- Document lines -->
+    <rect x="160" y="145" width="120" height="8" rx="4" fill="#CBD5E1"/>
+    <rect x="160" y="168" width="140" height="8" rx="4" fill="#CBD5E1"/>
+    <rect x="160" y="191" width="100" height="8" rx="4" fill="#CBD5E1"/>
+    <rect x="160" y="214" width="130" height="8" rx="4" fill="#CBD5E1"/>
+    <rect x="160" y="237" width="80" height="8" rx="4" fill="#CBD5E1"/>
+    <rect x="160" y="260" width="140" height="8" rx="4" fill="#CBD5E1"/>
+  </g>
+
+  <!-- .md badge -->
+  <g filter="url(#shadow-sm)">
+    <rect x="150" y="115" width="52" height="26" rx="5" fill="#3B82F6"/>
+    <text x="176" y="133" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="700" fill="white">.md</text>
+  </g>
+
+  <!-- Google Drive triangle -->
+  <g transform="translate(185, 310) scale(0.7)" filter="url(#shadow-sm)">
+    <polygon points="50,0 100,87 0,87" fill="#F4B400"/>
+    <polygon points="50,0 100,87 75,87 50,44" fill="#0F9D58" opacity="0.9"/>
+    <polygon points="0,87 25,44 75,44 50,87" fill="#4285F4" opacity="0.9"/>
+  </g>
+
+  <!-- Magnifying glass -->
+  <g transform="translate(290, 280)" filter="url(#shadow-sm)">
+    <circle cx="40" cy="40" r="35" fill="none" stroke="#1E293B" stroke-width="10"/>
+    <circle cx="40" cy="40" r="25" fill="#DBEAFE" opacity="0.5"/>
+    <line x1="66" y1="66" x2="100" y2="100" stroke="#1E293B" stroke-width="12" stroke-linecap="round"/>
+  </g>
+</svg>

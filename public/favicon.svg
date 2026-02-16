@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="a1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#EF4444"/>
+    </linearGradient>
+    <linearGradient id="a2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="a3" x1="100%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#22C55E"/>
+      <stop offset="100%" stop-color="#16A34A"/>
+    </linearGradient>
+    <linearGradient id="a4" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#8B5CF6"/>
+      <stop offset="100%" stop-color="#7C3AED"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded square background -->
+  <rect width="64" height="64" rx="14" fill="#1E293B"/>
+
+  <!-- Colorful arc -->
+  <path d="M 32 8 A 22 22 0 0 1 52 20" stroke="url(#a1)" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M 54 23 A 22 22 0 0 1 50 48" stroke="url(#a2)" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M 48 50 A 22 22 0 0 1 20 54" stroke="url(#a4)" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M 17 52 A 22 22 0 0 1 12 22" stroke="url(#a3)" stroke-width="4" fill="none" stroke-linecap="round"/>
+
+  <!-- Document -->
+  <rect x="18" y="15" width="22" height="28" rx="3" fill="white"/>
+  <!-- Text lines -->
+  <rect x="22" y="21" width="14" height="2" rx="1" fill="#94A3B8"/>
+  <rect x="22" y="26" width="12" height="2" rx="1" fill="#94A3B8"/>
+  <rect x="22" y="31" width="15" height="2" rx="1" fill="#94A3B8"/>
+
+  <!-- .md badge -->
+  <rect x="19" y="16" width="14" height="7" rx="2" fill="#3B82F6"/>
+  <text x="26" y="22" text-anchor="middle" font-family="system-ui, sans-serif" font-size="5.5" font-weight="700" fill="white">.md</text>
+
+  <!-- Magnifying glass -->
+  <circle cx="42" cy="40" r="8" fill="none" stroke="white" stroke-width="3"/>
+  <line x1="48" y1="46" x2="54" y2="52" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+</svg>
