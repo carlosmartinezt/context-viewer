@@ -32,6 +32,9 @@
   its fallback: a card is paper against desk with the workbench's theme, and
   the Paper values without one. Add a token here and give it a fallback too.
 
+  Every rule below nests under one scope selector so `ctx-` classes never
+  reach the workbench; `:where()` keeps that scope's own specificity at zero.
+
   The reference page, with the markup for each: /_ctx/components.
 */
 
@@ -54,213 +57,216 @@
   --ctx-pad: calc(var(--doc-gap, 0.55rem) * 1.4);
 }
 
-/* ═══════════════════════════════════════════════════════════
-   Page header
-   <header class="ctx-header">
-     <p class="ctx-eyebrow">Project</p>
-     <h1>Music Marketing 2026</h1>
-     <dl class="ctx-meta"> ... </dl>
-   </header>
-   A title block ruled off at the top in the page's accent. The rule is the
-   only decoration: it says "this is the head of the document" without a band
-   of colour behind it.
-   ═══════════════════════════════════════════════════════════ */
+:where(.cv-content, :root[data-ctx-frame] body) {
 
-:where(.cv-content, :root[data-ctx-frame] body) .ctx-header {
-  padding-top: var(--ctx-pad);
-  border-top: 3px solid var(--ctx-accent);
-  margin-bottom: calc(var(--doc-gap, 0.55rem) * 1.5);
-}
-:where(.cv-content, :root[data-ctx-frame] body) .ctx-header h1 { margin: 0 0 calc(var(--doc-gap, 0.55rem) * 0.5); }
-:where(.cv-content, :root[data-ctx-frame] body) .ctx-eyebrow {
-  margin: 0 0 0.35rem;
-  font-size: 0.72rem;
-  font-weight: 500;
-  color: var(--ctx-accent);
-}
+  /* ═══════════════════════════════════════════════════════════
+     Page header
+     <header class="ctx-header">
+       <p class="ctx-eyebrow">Project</p>
+       <h1>Music Marketing 2026</h1>
+       <dl class="ctx-meta"> ... </dl>
+     </header>
+     A title block ruled off at the top in the page's accent. The rule is the
+     only decoration: it says "this is the head of the document" without a band
+     of colour behind it.
+     ═══════════════════════════════════════════════════════════ */
 
-/* ═══════════════════════════════════════════════════════════
-   Meta grid
-   <dl class="ctx-meta">
-     <div><dt>Tracks published</dt><dd>40+</dd></div>
-     <div><dt>Status</dt><dd>Planning</dd></div>
-   </dl>
-   Label-and-value pairs across the measure. Each pair is wrapped in a div
-   because a <dl> cannot make dt and dd one grid cell on its own.
-   ═══════════════════════════════════════════════════════════ */
+  .ctx-header {
+    padding-top: var(--ctx-pad);
+    border-top: 3px solid var(--ctx-accent);
+    margin-bottom: calc(var(--doc-gap, 0.55rem) * 1.5);
+  }
+  .ctx-header h1 { margin: 0 0 calc(var(--doc-gap, 0.55rem) * 0.5); }
+  .ctx-eyebrow {
+    margin: 0 0 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--ctx-accent);
+  }
 
-:where(.cv-content, :root[data-ctx-frame] body) .ctx-meta {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-  gap: 0 1.5rem;
-  margin: 0;
-}
-:where(.cv-content, :root[data-ctx-frame] body) .ctx-meta > div {
-  padding: calc(var(--doc-gap, 0.55rem) * 0.6) 0;
-  border-top: 1px solid var(--border, #e7e1d8);
-}
-:where(.cv-content, :root[data-ctx-frame] body) .ctx-meta dt {
-  margin: 0 0 0.15rem;
-  font-size: 0.7rem;
-  color: var(--muted, #6f6960);
-}
-:where(.cv-content, :root[data-ctx-frame] body) .ctx-meta dd { margin: 0; font-weight: 500; }
+  /* ═══════════════════════════════════════════════════════════
+     Meta grid
+     <dl class="ctx-meta">
+       <div><dt>Tracks published</dt><dd>40+</dd></div>
+       <div><dt>Status</dt><dd>Planning</dd></div>
+     </dl>
+     Label-and-value pairs across the measure. Each pair is wrapped in a div
+     because a <dl> cannot make dt and dd one grid cell on its own.
+     ═══════════════════════════════════════════════════════════ */
 
-/* ═══════════════════════════════════════════════════════════
-   Card
-   <section class="ctx-card">
-     <div class="ctx-card-head">
-       <div><h3>Contractor quotes</h3><p class="ctx-sub">Three bids</p></div>
-       <span class="ctx-tag ctx-tag-active">In progress</span>
+  .ctx-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 0 1.5rem;
+    margin: 0;
+  }
+  .ctx-meta > div {
+    padding: calc(var(--doc-gap, 0.55rem) * 0.6) 0;
+    border-bottom: 1px solid var(--border, #e7e1d8);
+  }
+  .ctx-meta dt {
+    margin: 0 0 0.15rem;
+    font-size: 0.7rem;
+    color: var(--muted, #6f6960);
+  }
+  .ctx-meta dd { margin: 0; font-weight: 500; }
+
+  /* ═══════════════════════════════════════════════════════════
+     Card
+     <section class="ctx-card">
+       <div class="ctx-card-head">
+         <div><h3>Contractor quotes</h3><p class="ctx-sub">Three bids</p></div>
+         <span class="ctx-tag ctx-tag-active">In progress</span>
+       </div>
+       ...
+       <p class="ctx-note">One line of context.</p>
+     </section>
+     The one place a box is right: a card groups things that belong together
+     inside a document that is otherwise unboxed prose. Paper on the document's
+     own ground, one hairline, no shadow.
+     ═══════════════════════════════════════════════════════════ */
+
+  .ctx-card {
+    padding: var(--ctx-pad);
+    margin: 0 0 calc(var(--doc-gap, 0.55rem) * 0.6);
+    background: var(--card, #fffefb);
+    border: 1px solid var(--border, #e7e1d8);
+    border-radius: var(--r1, 4px);
+  }
+  .ctx-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: calc(var(--doc-gap, 0.55rem) * 0.6);
+  }
+  .ctx-card-head > :first-child { flex: 1; min-width: 0; }
+  .ctx-card :is(h2, h3, h4):first-child { margin-top: 0; }
+  .ctx-sub { margin: 0.2rem 0 0; font-size: 0.8em; color: var(--muted, #6f6960); }
+  /* A closing line inside a card, ruled off from what it comments on. */
+  .ctx-note {
+    margin: calc(var(--doc-gap, 0.55rem) * 0.6) 0 0;
+    padding-top: calc(var(--doc-gap, 0.55rem) * 0.5);
+    border-top: 1px solid var(--border, #e7e1d8);
+    font-size: 0.85em;
+    color: var(--muted, #6f6960);
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     Tag
+     <span class="ctx-tag ctx-tag-active">In progress</span>
+     A status pill. Tones are named for what they mean, not for their colour,
+     so a note says ctx-tag-blocked and the stylesheet decides what blocked
+     looks like. Background is the tone mixed into the page's own ground and
+     the ink is the tone mixed into the page's own ink, which is what keeps one
+     hue readable on a cream ground and on a near-black one.
+     ═══════════════════════════════════════════════════════════ */
+
+  .ctx-tag {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--r1, 4px);
+    font-size: 0.72rem;
+    font-weight: 500;
+    white-space: nowrap;
+    background: color-mix(in srgb, var(--tone, var(--ctx-gray)) 16%, var(--paper, #fdfcfa));
+    color: color-mix(in srgb, var(--tone, var(--ctx-gray)) 65%, var(--text, #26231f));
+  }
+  .ctx-tag-done { --tone: var(--ctx-green); }
+  .ctx-tag-active { --tone: var(--ctx-amber); }
+  .ctx-tag-blocked { --tone: var(--ctx-red); }
+  .ctx-tag-next { --tone: var(--ctx-blue); }
+  .ctx-tag-idea { --tone: var(--ctx-violet); }
+  .ctx-tag-idle { --tone: var(--ctx-gray); }
+
+  /* ═══════════════════════════════════════════════════════════
+     Chips
+     <div class="ctx-chips">
+       <span class="ctx-chip ctx-chip-done">App downloaded</span>
+       <span class="ctx-chip">Write bio</span>
      </div>
-     ...
-     <p class="ctx-note">One line of context.</p>
-   </section>
-   The one place a box is right: a card groups things that belong together
-   inside a document that is otherwise unboxed prose. Paper on the document's
-   own ground, one hairline, no shadow.
-   ═══════════════════════════════════════════════════════════ */
+     A checklist that wraps. Shorter than a list, and it reads at a glance,
+     which is the whole reason not to use <ul> for four three-word items.
+     ═══════════════════════════════════════════════════════════ */
 
-:where(.cv-content, :root[data-ctx-frame] body) .ctx-card {
-  padding: var(--ctx-pad);
-  margin: 0 0 calc(var(--doc-gap, 0.55rem) * 0.6);
-  background: var(--card, #fffefb);
-  border: 1px solid var(--border, #e7e1d8);
-  border-radius: var(--r1, 4px);
-}
-:where(.cv-content, :root[data-ctx-frame] body) .ctx-card-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: calc(var(--doc-gap, 0.55rem) * 0.6);
-}
-:where(.cv-content, :root[data-ctx-frame] body) .ctx-card-head > :first-child { flex: 1; min-width: 0; }
-:where(.cv-content, :root[data-ctx-frame] body) .ctx-card :is(h2, h3, h4):first-child { margin-top: 0; }
-:where(.cv-content, :root[data-ctx-frame] body) .ctx-sub { margin: 0.2rem 0 0; font-size: 0.8em; color: var(--muted, #6f6960); }
-/* A closing line inside a card, ruled off from what it comments on. */
-:where(.cv-content, :root[data-ctx-frame] body) .ctx-note {
-  margin: calc(var(--doc-gap, 0.55rem) * 0.6) 0 0;
-  padding-top: calc(var(--doc-gap, 0.55rem) * 0.5);
-  border-top: 1px solid var(--border, #e7e1d8);
-  font-size: 0.85em;
-  color: var(--muted, #6f6960);
-}
+  .ctx-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0; }
+  .ctx-chip {
+    padding: 0.12rem 0.5rem;
+    border: 1px solid var(--border, #e7e1d8);
+    border-radius: var(--r1, 4px);
+    font-size: 0.78em;
+    background: var(--paper, #fdfcfa);
+  }
+  /* Done is struck through as well as tinted: colour alone is not a state
+     anybody who cannot see the tint can read. */
+  .ctx-chip-done {
+    color: var(--muted, #6f6960);
+    text-decoration: line-through;
+    border-color: color-mix(in srgb, var(--ctx-green) 40%, var(--border, #e7e1d8));
+  }
 
-/* ═══════════════════════════════════════════════════════════
-   Tag
-   <span class="ctx-tag ctx-tag-active">In progress</span>
-   A status pill. Tones are named for what they mean, not for their colour,
-   so a note says ctx-tag-blocked and the stylesheet decides what blocked
-   looks like. Background is the tone mixed into the page's own ground and
-   the ink is the tone mixed into the page's own ink, which is what keeps one
-   hue readable on a cream ground and on a near-black one.
-   ═══════════════════════════════════════════════════════════ */
+  /* ═══════════════════════════════════════════════════════════
+     Callout
+     <p class="ctx-callout ctx-callout-warn">Renew before March.</p>
+     An aside that must not be missed. A left rule in the tone, no tinted box:
+     the document is paper, and a coloured panel in the middle of prose reads
+     as an advertisement.
+     ═══════════════════════════════════════════════════════════ */
 
-:where(.cv-content, :root[data-ctx-frame] body) .ctx-tag {
-  display: inline-block;
-  padding: 0.15rem 0.5rem;
-  border-radius: var(--r1, 4px);
-  font-size: 0.72rem;
-  font-weight: 500;
-  white-space: nowrap;
-  background: color-mix(in srgb, var(--tone, var(--ctx-gray)) 16%, var(--paper, #fdfcfa));
-  color: color-mix(in srgb, var(--tone, var(--ctx-gray)) 65%, var(--text, #26231f));
-}
-:where(.cv-content, :root[data-ctx-frame] body) .ctx-tag-done { --tone: var(--ctx-green); }
-:where(.cv-content, :root[data-ctx-frame] body) .ctx-tag-active { --tone: var(--ctx-amber); }
-:where(.cv-content, :root[data-ctx-frame] body) .ctx-tag-blocked { --tone: var(--ctx-red); }
-:where(.cv-content, :root[data-ctx-frame] body) .ctx-tag-next { --tone: var(--ctx-blue); }
-:where(.cv-content, :root[data-ctx-frame] body) .ctx-tag-idea { --tone: var(--ctx-violet); }
-:where(.cv-content, :root[data-ctx-frame] body) .ctx-tag-idle { --tone: var(--ctx-gray); }
+  .ctx-callout {
+    margin: var(--doc-gap, 0.55rem) 0;
+    padding: 0.1rem 0 0.1rem 0.9rem;
+    border-left: 3px solid var(--tone, var(--ctx-blue));
+  }
+  .ctx-callout-warn { --tone: var(--ctx-amber); }
+  .ctx-callout-stop { --tone: var(--ctx-red); }
+  .ctx-callout-good { --tone: var(--ctx-green); }
 
-/* ═══════════════════════════════════════════════════════════
-   Chips
-   <div class="ctx-chips">
-     <span class="ctx-chip ctx-chip-done">App downloaded</span>
-     <span class="ctx-chip">Write bio</span>
-   </div>
-   A checklist that wraps. Shorter than a list, and it reads at a glance,
-   which is the whole reason not to use <ul> for four three-word items.
-   ═══════════════════════════════════════════════════════════ */
+  /* ═══════════════════════════════════════════════════════════
+     Grid
+     <div class="ctx-grid"> ... </div>
+     Columns that fold to one on a narrow pane. Cards go in it; so does
+     anything else. Two columns by default, --ctx-col to change the minimum.
+     ═══════════════════════════════════════════════════════════ */
 
-:where(.cv-content, :root[data-ctx-frame] body) .ctx-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0; }
-:where(.cv-content, :root[data-ctx-frame] body) .ctx-chip {
-  padding: 0.12rem 0.5rem;
-  border: 1px solid var(--border, #e7e1d8);
-  border-radius: var(--r1, 4px);
-  font-size: 0.78em;
-  background: var(--paper, #fdfcfa);
-}
-/* Done is struck through as well as tinted: colour alone is not a state
-   anybody who cannot see the tint can read. */
-:where(.cv-content, :root[data-ctx-frame] body) .ctx-chip-done {
-  color: var(--muted, #6f6960);
-  text-decoration: line-through;
-  border-color: color-mix(in srgb, var(--ctx-green) 40%, var(--border, #e7e1d8));
-}
+  .ctx-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(var(--ctx-col, 15rem), 1fr));
+    gap: calc(var(--doc-gap, 0.55rem) * 0.6);
+    margin-bottom: var(--doc-gap, 0.55rem);
+  }
 
-/* ═══════════════════════════════════════════════════════════
-   Callout
-   <p class="ctx-callout ctx-callout-warn">Renew before March.</p>
-   An aside that must not be missed. A left rule in the tone, no tinted box:
-   the document is paper, and a coloured panel in the middle of prose reads
-   as an advertisement.
-   ═══════════════════════════════════════════════════════════ */
+  /* ═══════════════════════════════════════════════════════════
+     Log
+     <dl class="ctx-log">
+       <dt>2026-06-27</dt><dd>Project created.</dd>
+     </dl>
+     A dated list: a changelog, a decision record, a diary. Dates in the mono
+     face so they form a column the eye can run down, and the whole thing is a
+     <dl> because that is what it is.
+     ═══════════════════════════════════════════════════════════ */
 
-:where(.cv-content, :root[data-ctx-frame] body) .ctx-callout {
-  margin: var(--doc-gap, 0.55rem) 0;
-  padding: 0.1rem 0 0.1rem 0.9rem;
-  border-left: 3px solid var(--tone, var(--ctx-blue));
-}
-:where(.cv-content, :root[data-ctx-frame] body) .ctx-callout-warn { --tone: var(--ctx-amber); }
-:where(.cv-content, :root[data-ctx-frame] body) .ctx-callout-stop { --tone: var(--ctx-red); }
-:where(.cv-content, :root[data-ctx-frame] body) .ctx-callout-good { --tone: var(--ctx-green); }
+  .ctx-log {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.3rem 1.2rem;
+    margin: var(--doc-gap, 0.55rem) 0;
+    font-size: 0.9em;
+  }
+  .ctx-log dt {
+    font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+    font-size: 0.85em;
+    color: var(--muted, #6f6960);
+    white-space: nowrap;
+    padding-top: 0.15em;
+  }
+  .ctx-log dd { margin: 0; }
 
-/* ═══════════════════════════════════════════════════════════
-   Grid
-   <div class="ctx-grid"> ... </div>
-   Columns that fold to one on a narrow pane. Cards go in it; so does
-   anything else. Two columns by default, --ctx-col to change the minimum.
-   ═══════════════════════════════════════════════════════════ */
-
-:where(.cv-content, :root[data-ctx-frame] body) .ctx-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(var(--ctx-col, 15rem), 1fr));
-  gap: calc(var(--doc-gap, 0.55rem) * 0.6);
-  margin-bottom: var(--doc-gap, 0.55rem);
-}
-
-/* ═══════════════════════════════════════════════════════════
-   Log
-   <dl class="ctx-log">
-     <dt>2026-06-27</dt><dd>Project created.</dd>
-   </dl>
-   A dated list: a changelog, a decision record, a diary. Dates in the mono
-   face so they form a column the eye can run down, and the whole thing is a
-   <dl> because that is what it is.
-   ═══════════════════════════════════════════════════════════ */
-
-:where(.cv-content, :root[data-ctx-frame] body) .ctx-log {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 0.3rem 1.2rem;
-  margin: var(--doc-gap, 0.55rem) 0;
-  font-size: 0.9em;
-}
-:where(.cv-content, :root[data-ctx-frame] body) .ctx-log dt {
-  font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
-  font-size: 0.85em;
-  color: var(--muted, #6f6960);
-  white-space: nowrap;
-  padding-top: 0.15em;
-}
-:where(.cv-content, :root[data-ctx-frame] body) .ctx-log dd { margin: 0; }
-
-/* One column on a narrow pane: a date column and a text column in 300px is
-   a date column and one word per line. */
-@media (max-width: 620px) {
-  :where(.cv-content, :root[data-ctx-frame] body) .ctx-log { grid-template-columns: 1fr; gap: 0 0; }
-  :where(.cv-content, :root[data-ctx-frame] body) .ctx-log dd { margin-bottom: 0.6rem; }
-  :where(.cv-content, :root[data-ctx-frame] body) .ctx-card-head { flex-direction: column; }
+  /* One column on a narrow pane: a date column and a text column in 300px is
+     a date column and one word per line. */
+  @media (max-width: 620px) {
+    .ctx-log { grid-template-columns: 1fr; gap: 0 0; }
+    .ctx-log dd { margin-bottom: 0.6rem; }
+    .ctx-card-head { flex-direction: column; }
+  }
 }
