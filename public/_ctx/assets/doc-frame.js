@@ -45,7 +45,7 @@
     }
     e.preventDefault()
     // /_ctx/doc/x is how this frame addresses a file; the workbench knows it as /x.
-    post({ type: 'ctx:open', path: url.pathname.replace(/^\/_ctx/doc/, '') + url.search })
+    post({ type: 'ctx:open', path: url.pathname.replace(/^\/_ctx\/doc\//, '/') + url.search })
   })
 
   // The minimap and its viewport box are drawn by the workbench from this
