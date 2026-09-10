@@ -80,6 +80,12 @@ export function makeConfig(appDir: string) {
     /** Writes are committed when the root is a git repo. Off makes them plain. */
     gitCommits: env('GIT_COMMITS', 'true') !== 'false',
 
+    /** When set, every write, rename, delete and git mutation is refused at
+     *  the one place they all go through (files.ts), regardless of what the
+     *  UI offers. For a demo instance pointed at content nobody should be
+     *  able to change. */
+    readonly: env('READONLY', 'false') === 'true',
+
     /** Set by the settings page, or by env for a scripted deployment. */
     anthropicKey: env('ANTHROPIC_API_KEY', ''),
     /** Overridable so the agent can be pointed at a gateway, or at a stub. */

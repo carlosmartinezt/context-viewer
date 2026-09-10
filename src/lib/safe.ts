@@ -13,7 +13,21 @@ export class OutsideRootError extends Error {}
  * the reason the agent's tools cannot reach outside the root no matter what
  * the model decides to ask for. Do not add a second way to open a file.
  */
-export async function resolveWithin(root: string, segments: string[]): Promise<string> {
+export async function resolveWithin(root: string, rawSegments: string[]): Promise<string> {
+  // Next's root-level catch-all (the browse page) hands back segments still
+  // percent-encoded for anything with a space or other reserved character in
+  // it, while every other route in this app (nested under /_ctx/...) already
+  // gets them decoded. Decoding again here is a no-op for those, and the
+  // try/catch is there because a segment can legitimately contain a bare '%'
+  // (a file named "50% off.txt"), which is not valid percent-encoding and
+  // throws rather than silently mangling the name.
+  const segments = rawSegments.map((s) => {
+    try {
+      return decodeURIComponent(s)
+    } catch {
+      return s
+    }
+  })
   for (const s of segments) {
     if (!s || s === '.' || s === '..' || s.includes('\0') || s.includes('/') || s.includes('\\')) {
       throw new OutsideRootError(`Rejected path segment: ${JSON.stringify(s)}`)

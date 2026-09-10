@@ -75,6 +75,7 @@ export function makeGit(config: Config, audit: Audit) {
   }
 
   async function commit(message: string) {
+    if (config.readonly) throw new Error('This instance is read-only.')
     const text = String(message || '').trim()
     if (!text) throw new Error('Write a commit message first.')
     if (!(await isRepo())) throw new Error('This directory is not a git repository.')
@@ -93,6 +94,7 @@ export function makeGit(config: Config, audit: Audit) {
    * it can see where these files are about to go.
    */
   async function push() {
+    if (config.readonly) throw new Error('This instance is read-only.')
     if (!(await isRepo())) throw new Error('This directory is not a git repository.')
     const { upstream, ahead } = await status()
     if (!upstream) throw new Error('No upstream branch is configured for this branch.')
@@ -105,6 +107,7 @@ export function makeGit(config: Config, audit: Audit) {
   }
 
   async function pull() {
+    if (config.readonly) throw new Error('This instance is read-only.')
     if (!(await isRepo())) throw new Error('This directory is not a git repository.')
     // --ff-only: a merge commit or a conflict is not something this panel can
     // sensibly resolve, so refuse rather than leave the tree half merged.

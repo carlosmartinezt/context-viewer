@@ -226,9 +226,17 @@ export function makeFiles(config: Config, audit: Audit) {
 
   // ── Writes ─────────────────────────────────────────────────────────────
 
+  /** The one check every write, rename and delete makes before touching
+   *  anything. A message rather than a generic 403: this is a demo/read-only
+   *  instance saying so, not a permissions error to debug. */
+  function checkWritable() {
+    if (config.readonly) throw new Error('This instance is read-only.')
+  }
+
   /** Write through a temp file in the same directory, so a crash cannot
    *  leave a note half written. */
   async function write(segments: string[], content: string, message?: string) {
+    checkWritable()
     const abs = await resolve(segments)
     const tmp = path.join(path.dirname(abs), `.${path.basename(abs)}.tmp`)
     await fs.writeFile(tmp, content, 'utf8')
@@ -240,6 +248,7 @@ export function makeFiles(config: Config, audit: Audit) {
   }
 
   async function rename(segments: string[], nextName: string) {
+    checkWritable()
     if (!nextName || nextName.includes('/') || nextName.includes('\0') || nextName === '.' || nextName === '..') {
       throw new Error('Invalid name')
     }
@@ -260,6 +269,7 @@ export function makeFiles(config: Config, audit: Audit) {
    * turning up in search and still be one URL away.
    */
   async function trash(segments: string[]) {
+    checkWritable()
     const abs = await resolve(segments)
     const relPath = rel(abs)
     const stamp = new Date().toISOString().replace(/[:.]/g, '-')
