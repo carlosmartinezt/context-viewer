@@ -1,0 +1,40 @@
+# systemd user unit: ~/.config/systemd/user/context-viewer.service
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now context-viewer
+# No sudo. To survive a reboot, enable lingering once for the account that
+# runs it: loginctl enable-linger $USER
+# %h is the home directory; the paths below assume the repo is ~/context-viewer.
+
+[Unit]
+Description=context-viewer (behind Caddy)
+After=network.target
+
+[Service]
+WorkingDirectory=%h/context-viewer
+EnvironmentFile=%h/context-viewer/.env.local
+# next start serves the build in .next, so a deploy is `npm ci && npm run
+# build` before the restart. There is no watching and no compiling at runtime.
+# -H is not optional: `next start` ignores HOST (it reads -H or HOSTNAME), so
+# without it Next binds 0.0.0.0 and the app is reachable directly, bypassing
+# Caddy. The CSRF check trusts X-Forwarded-Host precisely because only the
+# proxy can reach us. The binary is called directly rather than through npx,
+# which resolves at run time and can fail with no network.
+ExecStart=%h/context-viewer/node_modules/.bin/next start -H 127.0.0.1 -p 3064
+Restart=on-failure
+RestartSec=2
+
+# No mount-namespace sandboxing here, and that is deliberate rather than an
+# oversight. ProtectSystem, ReadOnlyPaths and ReadWritePaths all need an
+# unprivileged user namespace, which this box refuses
+# (kernel.apparmor_restrict_unprivileged_userns=1 on Ubuntu 24.04), so systemd
+# accepts the directives and silently confines nothing. Verified 8 Sep 2026 by
+# writing outside ReadWritePaths from a unit that declared it.
+#
+# The real boundary is resolveWithin() in src/lib/safe.ts: no path reaches the
+# filesystem without being proved inside ROOT_DIR first. If this ever needs
+# kernel-level confinement too, it has to become a system unit, which costs the
+# no-sudo property this one has.
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target

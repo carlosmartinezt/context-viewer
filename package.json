@@ -1,0 +1,31 @@
+{
+  "name": "context-viewer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A lightweight file viewer with AI capabilities.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "hash-password": "node ops/hash-password.js",
+    "reset-password": "node ops/reset-password.js",
+    "factory-reset": "node ops/factory-reset.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "next": "^16.3.4",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "^7.0.2"
+  }
+}

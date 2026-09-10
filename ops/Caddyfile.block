@@ -1,0 +1,22 @@
+# Reference copy. The live config is /etc/caddy/Caddyfile, and editing this
+# file changes nothing. Append only the block below (the two comment lines
+# above this one are meta-commentary for whoever reads this file, not part
+# of the site definition, and should not be copied into the live Caddyfile).
+#
+# Replace notes.example.com with your own host. It needs a DNS record first,
+# or Caddy cannot get a certificate for it.
+
+notes.example.com {
+	encode gzip
+
+	log {
+		output file /var/log/caddy/notes.example.com.log
+	}
+
+	# flush_interval -1 is load-bearing: the agent answers as
+	# text/event-stream and a buffering proxy delivers the whole
+	# conversation in one lump at the end.
+	reverse_proxy 127.0.0.1:3064 {
+		flush_interval -1
+	}
+}

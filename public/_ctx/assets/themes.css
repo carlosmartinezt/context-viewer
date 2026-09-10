@@ -1,0 +1,361 @@
+/*
+  context-viewer — themes.
+
+  Two independent axes, on purpose:
+
+    data-ui-theme   the colours of the workbench (activity bar, sidebar,
+                    tabs, panel, status bar). Ported from VS Code's built-in
+                    themes, so the names mean what people expect them to.
+
+  Document typography is not a second axis any more. The --doc-* tokens below
+  are one fixed setting, and a document takes its paper and ink from whichever
+  UI theme is chosen.
+
+  A document's paper and ink follow the UI theme (--doc-paper: var(--paper)),
+  so choosing a dark chrome darkens the page under the text with it.
+
+  Adding a theme here means adding its name to UI_THEMES in
+  src/components/themes.ts. Nothing else: no new selectors, ever.
+*/
+
+/* ═══════════════════════════════════════════════════════════
+   UI themes. Thirteen tokens each, and thirteen is the whole
+   contract: every component in viewer.css paints from these.
+     --bg         the editor ground behind everything
+     --panel      inset surfaces (code chips, wells)
+     --card       raised surfaces (the agent dock, inputs)
+     --text       primary ink
+     --muted      secondary ink
+     --border     rules inside documents and listings
+     --accent     links and primary buttons
+     --chrome     the desk: activity bar, sidebar, tabs, status
+     --chrome-line  the desk's own hairlines
+     --chrome-text  ink on the desk
+     --paper      the document surface set on the desk
+     --selected   the selected-row wash
+     --focus      focus rings and active indicators
+   ═══════════════════════════════════════════════════════════ */
+
+/* The five tokens that are not a palette choice: the wash a hover leaves,
+   the two status inks, the drop shadow, and ink on an accent-filled button.
+   Light values here; the dark themes flip the first three below. */
+:root {
+  --hover: rgba(0, 0, 0, 0.035);
+  --hover-strong: rgba(0, 0, 0, 0.09);
+  --danger: #b4453a;
+  --ok: #4a7a4a;
+  --shadow: rgba(38, 35, 31, 0.25);
+  /* Ink on a filled surface. Two of them, because --accent and --focus are
+     different colours in most themes and a theme with a pale accent needs
+     dark ink on its buttons: white on #4daafc is not readable. Each theme
+     that needs to says so in its own block. */
+  --on-accent: #fff;
+  --on-focus: #fff;
+  --scroll: rgba(0, 0, 0, 0.22);
+  --scroll-hover: rgba(0, 0, 0, 0.38);
+  /* The focus halo, as a wash of whatever the theme's focus colour is. */
+  --ring: color-mix(in srgb, var(--focus) 25%, transparent);
+  color-scheme: light;
+}
+
+/* Every dark theme in one selector, because "a hover is a lighter wash and
+   the scrollbars are dark" is the only thing they have in common. Adding a
+   dark theme means adding its name here too. */
+:root:is(
+  [data-ui-theme="dark-plus"], [data-ui-theme="dark-modern"],
+  [data-ui-theme="abyss"], [data-ui-theme="monokai"],
+  [data-ui-theme="monokai-dimmed"], [data-ui-theme="solarized-dark"],
+  [data-ui-theme="kimbie-dark"], [data-ui-theme="red"],
+  [data-ui-theme="tomorrow-night-blue"], [data-ui-theme="high-contrast-dark"]
+) {
+  --hover: rgba(255, 255, 255, 0.06);
+  --hover-strong: rgba(255, 255, 255, 0.13);
+  --danger: #f14c4c;
+  --ok: #89d185;
+  --shadow: rgba(0, 0, 0, 0.5);
+  --scroll: rgba(255, 255, 255, 0.2);
+  --scroll-hover: rgba(255, 255, 255, 0.36);
+  color-scheme: dark;
+}
+
+/* Paper — this app's own light theme, and the default. Warm, low contrast,
+   a desk with a sheet on it. Not a port of anything. */
+:root, :root[data-ui-theme="paper"] {
+  --bg: #faf8f4;
+  --panel: #f3efe8;
+  --card: #fffefb;
+  --text: #26231f;
+  --muted: #6f6960;
+  --border: #e7e1d8;
+  --accent: #9a5d39;
+  --chrome: #ece8e0;
+  --chrome-line: #ddd7cc;
+  --chrome-text: #57514a;
+  --paper: #fdfcfa;
+  --selected: rgba(154, 93, 57, 0.1);
+  --focus: #9a5d39;
+}
+
+/* ── Light ─────────────────────────────────────────────── */
+
+:root[data-ui-theme="light-plus"] {
+  --bg: #ffffff;
+  --panel: #f3f3f3;
+  --card: #ffffff;
+  --text: #3b3b3b;
+  --muted: #616161;
+  --border: #e5e5e5;
+  --accent: #0066bf;
+  --chrome: #f8f8f8;
+  --chrome-line: #e5e5e5;
+  --chrome-text: #3b3b3b;
+  --paper: #ffffff;
+  --selected: #e4e6f1;
+  --focus: #005fb8;
+}
+
+:root[data-ui-theme="quiet-light"] {
+  --bg: #f5f5f5;
+  --panel: #ececec;
+  --card: #ffffff;
+  --text: #333333;
+  --muted: #7a7a7a;
+  --border: #dcdcdc;
+  --accent: #4b83cd;
+  --chrome: #ececec;
+  --chrome-line: #dcdcdc;
+  --chrome-text: #6c6c6c;
+  --paper: #f5f5f5;
+  --selected: #c9d0d9;
+  --focus: #7a3e9d;
+}
+
+:root[data-ui-theme="solarized-light"] {
+  --bg: #fdf6e3;
+  --panel: #eee8d5;
+  --card: #fdf6e3;
+  --text: #586e75;
+  --muted: #93a1a1;
+  --border: #ded8c5;
+  --accent: #268bd2;
+  --chrome: #eee8d5;
+  --chrome-line: #ded8c5;
+  --chrome-text: #586e75;
+  --paper: #fdf6e3;
+  --selected: #dfd9c3;
+  --focus: #268bd2;
+}
+
+/* ── Dark ──────────────────────────────────────────────── */
+
+:root[data-ui-theme="dark-plus"] {
+  --bg: #1e1e1e;
+  --panel: #2d2d2d;
+  --card: #252526;
+  --text: #d4d4d4;
+  --muted: #9d9d9d;
+  --border: #3c3c3c;
+  --accent: #4daafc;
+  --chrome: #252526;
+  --chrome-line: #2b2b2b;
+  --chrome-text: #cccccc;
+  --paper: #1e1e1e;
+  --selected: #37373d;
+  --focus: #007fd4;
+  --on-accent: #10151b;
+}
+
+:root[data-ui-theme="dark-modern"] {
+  --bg: #1f1f1f;
+  --panel: #2b2b2b;
+  --card: #181818;
+  --text: #cccccc;
+  --muted: #9d9d9d;
+  --border: #313131;
+  --accent: #4daafc;
+  --chrome: #181818;
+  --chrome-line: #2b2b2b;
+  --chrome-text: #cccccc;
+  --paper: #1f1f1f;
+  --selected: #2a2d2e;
+  --focus: #0078d4;
+  --on-accent: #10151b;
+}
+
+:root[data-ui-theme="abyss"] {
+  --bg: #000c18;
+  --panel: #082050;
+  --card: #010b19;
+  --text: #cccccc;
+  --muted: #7c8ba4;
+  --border: #1b325f;
+  --accent: #22aaff;
+  --chrome: #010b19;
+  --chrome-line: #0b2b5e;
+  --chrome-text: #b0b8c8;
+  --paper: #000c18;
+  --selected: #082050;
+  --focus: #2277cc;
+  --on-accent: #00142b;
+}
+
+:root[data-ui-theme="monokai"] {
+  --bg: #272822;
+  --panel: #3e3d32;
+  --card: #1e1f1c;
+  --text: #f8f8f2;
+  --muted: #a59f85;
+  --border: #414339;
+  --accent: #66d9ef;
+  --chrome: #1e1f1c;
+  --chrome-line: #34352f;
+  --chrome-text: #cfcfc2;
+  --paper: #272822;
+  --selected: #414339;
+  --focus: #75715e;
+  --on-accent: #1b1c18;
+}
+
+:root[data-ui-theme="monokai-dimmed"] {
+  --bg: #1e1e1e;
+  --panel: #303030;
+  --card: #272727;
+  --text: #c5c8c6;
+  --muted: #8f908a;
+  --border: #3a3a3a;
+  --accent: #9daecc;
+  --chrome: #272727;
+  --chrome-line: #343434;
+  --chrome-text: #c5c8c6;
+  --paper: #1e1e1e;
+  --selected: #37373d;
+  --focus: #6a7b8f;
+  --on-accent: #16181b;
+}
+
+:root[data-ui-theme="solarized-dark"] {
+  --bg: #002b36;
+  --panel: #073642;
+  --card: #00212b;
+  --text: #93a1a1;
+  --muted: #6b8a92;
+  --border: #0b4553;
+  --accent: #2aa198;
+  --chrome: #00212b;
+  --chrome-line: #0b3c49;
+  --chrome-text: #93a1a1;
+  --paper: #002b36;
+  --selected: #073642;
+  --focus: #268bd2;
+  --on-accent: #00212b;
+}
+
+:root[data-ui-theme="kimbie-dark"] {
+  --bg: #221a0f;
+  --panel: #362712;
+  --card: #221a0f;
+  --text: #d3af86;
+  --muted: #a57a4c;
+  --border: #423120;
+  --accent: #d3af86;
+  --chrome: #1a1109;
+  --chrome-line: #362712;
+  --chrome-text: #d3af86;
+  --paper: #221a0f;
+  --selected: #5e452b;
+  --focus: #a57a4c;
+  --on-accent: #221a0f;
+}
+
+:root[data-ui-theme="red"] {
+  --bg: #390000;
+  --panel: #550000;
+  --card: #2d0000;
+  --text: #f8f8f8;
+  --muted: #c89191;
+  --border: #5a1616;
+  --accent: #ffc0c0;
+  --chrome: #2d0000;
+  --chrome-line: #560000;
+  --chrome-text: #e8b3b3;
+  --paper: #390000;
+  --selected: #770000;
+  --focus: #ff5555;
+  --on-accent: #390000;
+}
+
+:root[data-ui-theme="tomorrow-night-blue"] {
+  --bg: #002451;
+  --panel: #003f8e;
+  --card: #001c40;
+  --text: #ffffff;
+  --muted: #7285b7;
+  --border: #00346e;
+  --accent: #bbdaff;
+  --chrome: #001c40;
+  --chrome-line: #00346e;
+  --chrome-text: #d6dfef;
+  --paper: #002451;
+  --selected: #003f8e;
+  --focus: #4f7fc4;
+  --on-accent: #002451;
+}
+
+/* High contrast, both directions. Borders do the work light and shade
+   normally would, so the hairline tokens are the ink colour itself. */
+:root[data-ui-theme="high-contrast-dark"] {
+  --bg: #000000;
+  --panel: #0f0f0f;
+  --card: #000000;
+  --text: #ffffff;
+  --muted: #cccccc;
+  --border: #6fc3df;
+  --accent: #3794ff;
+  --chrome: #000000;
+  --chrome-line: #6fc3df;
+  --chrome-text: #ffffff;
+  --selected: #ffffff26;
+  --paper: #000000;
+  --focus: #f38518;
+  --on-accent: #000000;
+  --on-focus: #000000;
+}
+
+:root[data-ui-theme="high-contrast-light"] {
+  --bg: #ffffff;
+  --panel: #f2f2f2;
+  --card: #ffffff;
+  --text: #000000;
+  --muted: #3b3b3b;
+  --border: #000000;
+  --accent: #0f4a85;
+  --chrome: #ffffff;
+  --chrome-line: #000000;
+  --chrome-text: #000000;
+  --paper: #ffffff;
+  --selected: #0f4a8526;
+  --focus: #0f4a85;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Document type. One setting, not a choice: face, size,
+   leading, tracking, heading scale, rhythm, measure. Colour
+   comes from the UI theme.
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  --doc-paper: var(--paper);
+  --doc-ink: var(--text);
+
+  --doc-body: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --doc-display: var(--doc-body);
+  --doc-size: 1rem;
+  --doc-leading: 1.45;
+  --doc-track: -0.011em;
+  --doc-weight: 700;
+  --doc-h1: calc(var(--doc-size) * 1.6);
+  --doc-h2: calc(var(--doc-size) * 1.32);
+  --doc-h3: calc(var(--doc-size) * 1.09);
+  --doc-gap: 0.55rem;
+  --doc-read: 1000px;
+}
