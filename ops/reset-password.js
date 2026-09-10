@@ -18,7 +18,7 @@ import { hashPassword } from '../src/lib/auth.ts'
  * than changed, because the usual reason to run this is having forgotten
  * which one it was.
  */
-// Same three lines server.js boots with, in the same order, so this script
+// Same three lines the server boots with, in the same order, so this script
 // reads exactly the settings the running app does.
 const appDir = path.dirname(path.dirname(fileURLToPath(import.meta.url)))
 loadEnv(appDir)

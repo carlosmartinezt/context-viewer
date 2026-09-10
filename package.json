@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "description": "A lightweight file viewer with AI capabilities.",
+  "license": "MIT",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
