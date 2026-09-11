@@ -5,19 +5,12 @@ import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { resolveWithin } from './safe'
 import { errorCode, errorMessage } from './errors'
+import { kindOf, opensInWorkbench } from './kind'
 import type { Config, Audit, Entry, Kind, Tree, TreeNode } from './types'
 
 const run = promisify(execFile)
 
-export function kindOf(name: string): Kind {
-  const ext = path.extname(name).toLowerCase()
-  if (ext === '.html' || ext === '.htm') return 'html'
-  if (ext === '.md' || ext === '.markdown') return 'markdown'
-  if (ext === '.pdf') return 'pdf'
-  if (['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.avif'].includes(ext)) return 'image'
-  if (['.txt', '.csv', '.json', '.js', '.ts', '.css', '.log', '.yml', '.yaml'].includes(ext)) return 'text'
-  return 'other'
-}
+export { kindOf, opensInWorkbench }
 
 /**
  * The <title> an HTML note gave itself, or null if it has none.
@@ -50,7 +43,7 @@ export function htmlTitle(raw: string): string | null {
 
 /** Text is what the agent may read and write. Everything else is bytes. */
 export function isEditable(name: string): boolean {
-  return ['html', 'markdown', 'text'].includes(kindOf(name))
+  return opensInWorkbench(name)
 }
 
 export const contentTypes: Record<string, string> = {

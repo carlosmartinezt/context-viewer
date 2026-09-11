@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import type { PointerEvent as ReactPointerEvent, ReactNode } from 'react'
 import type { Tree as TreeData } from '@/lib/types'
+import { opensInWorkbench } from '@/lib/kind'
 import { Tree } from './Tree'
 import { Minimap } from './Minimap'
 import { AgentPanel } from './AgentPanel'
@@ -171,7 +172,16 @@ export function Workbench({
   useEffect(() => {
     const onMessage = (e: MessageEvent) => {
       if (e.origin !== location.origin) return
-      if (e.data?.type === 'ctx:open') open(String(e.data.path))
+      if (e.data?.type === 'ctx:open') {
+        // A PDF or an image linked from a note goes to a new browser tab, as it
+        // does from the tree. The click happened in the frame, and a click
+        // activates the frame's ancestors too, so this is not a blocked popup.
+        const path = String(e.data.path)
+        const name = decodeURIComponent(path.split('?')[0].split('/').pop() || '')
+        if (path.startsWith('/_ctx/file/')) window.open(path, '_blank', 'noopener')
+        else if (name.includes('.') && !opensInWorkbench(name)) window.open('/_ctx/file' + path, '_blank', 'noopener')
+        else open(path)
+      }
       if (e.data?.type === 'ctx:blur') { setMenu('none'); setRowMenu(null); setTabMenu(null) }
     }
     addEventListener('message', onMessage)

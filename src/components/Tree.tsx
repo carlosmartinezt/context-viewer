@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import type { TreeNode } from '@/lib/types'
+import { opensInWorkbench } from '@/lib/kind'
 import { EntryIcon } from './icons'
 
 /**
@@ -123,6 +124,10 @@ function Row({
   )
 
   if (!node.isDir) {
+    // A PDF, an image or anything else the workbench cannot show is a plain
+    // link to its bytes in a new browser tab. Routing it through onOpen was a
+    // full page load that took the tabs and the tree down with it.
+    const inWorkbench = opensInWorkbench(node.name)
     return (
       <li>
         {/* Every row is twisty, icon, name, in that order. A file's twisty slot
@@ -130,11 +135,13 @@ function Row({
         <a
           className="ctx-row"
           style={style}
-          href={href}
+          href={inWorkbench ? href : `/_ctx/file${href}`}
+          target={inWorkbench ? undefined : '_blank'}
+          rel={inWorkbench ? undefined : 'noopener'}
           title={rel}
           aria-current={href === currentPath ? 'page' : undefined}
           onClick={(e) => {
-            if (e.metaKey || e.ctrlKey || e.button !== 0) return
+            if (!inWorkbench || e.metaKey || e.ctrlKey || e.button !== 0) return
             e.preventDefault()
             onOpen(href)
           }}

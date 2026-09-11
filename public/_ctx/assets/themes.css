@@ -337,25 +337,11 @@
   --focus: #0f4a85;
 }
 
-/* ═══════════════════════════════════════════════════════════
-   Document type. One setting, not a choice: face, size,
-   leading, tracking, heading scale, rhythm, measure. Colour
-   comes from the UI theme.
-   ═══════════════════════════════════════════════════════════ */
+/* A document's paper and ink follow the UI theme, so a dark chrome darkens
+   the page under the text with it. Colour only: type and spacing are not a
+   theme's business, and live in viewer.css. */
 
 :root {
   --doc-paper: var(--paper);
   --doc-ink: var(--text);
-
-  --doc-body: system-ui, -apple-system, "Segoe UI", sans-serif;
-  --doc-display: var(--doc-body);
-  --doc-size: 1rem;
-  --doc-leading: 1.45;
-  --doc-track: -0.011em;
-  --doc-weight: 700;
-  --doc-h1: calc(var(--doc-size) * 1.6);
-  --doc-h2: calc(var(--doc-size) * 1.32);
-  --doc-h3: calc(var(--doc-size) * 1.09);
-  --doc-gap: 0.55rem;
-  --doc-read: 1000px;
 }

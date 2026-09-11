@@ -54,7 +54,7 @@
   /* One rhythm for every component here, derived from the document theme's
      own gap, so components breathe with the typography rather than against
      it: pick swiss-micro and the cards tighten with the prose. */
-  --ctx-pad: calc(var(--doc-gap, 0.55rem) * 1.4);
+  --ctx-pad: 0.75rem;
 }
 
 :where(.cv-content, :root[data-ctx-frame] body) {
@@ -74,9 +74,9 @@
   .ctx-header {
     padding-top: var(--ctx-pad);
     border-top: 3px solid var(--ctx-accent);
-    margin-bottom: calc(var(--doc-gap, 0.55rem) * 1.5);
+    margin-bottom: 0.8rem;
   }
-  .ctx-header h1 { margin: 0 0 calc(var(--doc-gap, 0.55rem) * 0.5); }
+  .ctx-header h1 { margin: 0 0 0.25rem; }
   .ctx-eyebrow {
     margin: 0 0 0.35rem;
     font-size: 0.72rem;
@@ -101,7 +101,7 @@
     margin: 0;
   }
   .ctx-meta > div {
-    padding: calc(var(--doc-gap, 0.55rem) * 0.6) 0;
+    padding: 0.35rem 0;
     border-bottom: 1px solid var(--border, #e7e1d8);
   }
   .ctx-meta dt {
@@ -128,7 +128,7 @@
 
   .ctx-card {
     padding: var(--ctx-pad);
-    margin: 0 0 calc(var(--doc-gap, 0.55rem) * 0.6);
+    margin: 0 0 0.35rem;
     background: var(--card, #fffefb);
     border: 1px solid var(--border, #e7e1d8);
     border-radius: var(--r1, 4px);
@@ -138,15 +138,15 @@
     align-items: flex-start;
     justify-content: space-between;
     gap: 0.75rem;
-    margin-bottom: calc(var(--doc-gap, 0.55rem) * 0.6);
+    margin-bottom: 0.35rem;
   }
   .ctx-card-head > :first-child { flex: 1; min-width: 0; }
   .ctx-card :is(h2, h3, h4):first-child { margin-top: 0; }
   .ctx-sub { margin: 0.2rem 0 0; font-size: 0.8em; color: var(--muted, #6f6960); }
   /* A closing line inside a card, ruled off from what it comments on. */
   .ctx-note {
-    margin: calc(var(--doc-gap, 0.55rem) * 0.6) 0 0;
-    padding-top: calc(var(--doc-gap, 0.55rem) * 0.5);
+    margin: 0.35rem 0 0;
+    padding-top: 0.25rem;
     border-top: 1px solid var(--border, #e7e1d8);
     font-size: 0.85em;
     color: var(--muted, #6f6960);
@@ -214,7 +214,7 @@
      ═══════════════════════════════════════════════════════════ */
 
   .ctx-callout {
-    margin: var(--doc-gap, 0.55rem) 0;
+    margin: 0.5rem 0;
     padding: 0.1rem 0 0.1rem 0.9rem;
     border-left: 3px solid var(--tone, var(--ctx-blue));
   }
@@ -232,8 +232,8 @@
   .ctx-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(var(--ctx-col, 15rem), 1fr));
-    gap: calc(var(--doc-gap, 0.55rem) * 0.6);
-    margin-bottom: var(--doc-gap, 0.55rem);
+    gap: 0.35rem;
+    margin-bottom: 0.5rem;
   }
 
   /* ═══════════════════════════════════════════════════════════
@@ -250,7 +250,7 @@
     display: grid;
     grid-template-columns: max-content 1fr;
     gap: 0.3rem 1.2rem;
-    margin: var(--doc-gap, 0.55rem) 0;
+    margin: 0.5rem 0;
     font-size: 0.9em;
   }
   .ctx-log dt {

@@ -3,7 +3,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import { files, audit } from '@/server/runtime'
 import { requester } from '@/server/session'
-import { kindOf, htmlTitle } from '@/lib/files'
+import { kindOf, htmlTitle, opensInWorkbench } from '@/lib/files'
 import { OutsideRootError } from '@/lib/safe'
 import { Listing } from '@/components/Listing'
 import { DocFrame } from '@/components/DocFrame'
@@ -59,7 +59,9 @@ export async function generateMetadata({ params, searchParams }: {
 
 /**
  * Everything in the tree: a folder is a listing, a file is a document.
- * Anything that is not text redirects to /_ctx/file, which serves bytes.
+ * Anything that is not text redirects to /_ctx/file, which serves bytes. The
+ * tree and the listing link such files straight there in a new tab, so this
+ * redirect is only for a URL typed or pasted in.
  */
 export default async function BrowsePage({
   params,
@@ -98,7 +100,7 @@ export default async function BrowsePage({
   }
 
   const name = path.basename(abs)
-  if (!['html', 'markdown', 'text'].includes(kindOf(name))) {
+  if (!opensInWorkbench(name)) {
     redirect('/_ctx/file' + href)
   }
 

@@ -1,8 +1,10 @@
 'use client'
 
 import { useCallback, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { Entry } from '@/lib/types'
+import { opensInWorkbench } from '@/lib/kind'
 import { EntryIcon } from './icons'
 import { useDialog } from './Dialog'
 
@@ -74,7 +76,7 @@ export function Listing({
               const arrow = sort === key ? (dir === 'desc' ? ' ↓' : ' ↑') : ''
               return (
                 <th key={key} className={key === 'name' ? 'name' : 'num'}>
-                  <a href={`${here || '/'}?sort=${key}&dir=${next}`}>{label}{arrow}</a>
+                  <Link href={`${here || '/'}?sort=${key}&dir=${next}`}>{label}{arrow}</Link>
                 </th>
               )
             })}
@@ -84,14 +86,21 @@ export function Listing({
         <tbody>
           {entries.map((e) => {
             const href = `${here}/${encodeURIComponent(e.name)}`
-            const target = e.isDir || ['html', 'markdown', 'text'].includes(e.kind) ? href : `/_ctx/file${href}`
+            const label = (
+              <>
+                <EntryIcon name={e.name} isDir={e.isDir} />
+                <span>{e.name}</span>
+              </>
+            )
             return (
               <tr key={e.name}>
                 <td className="name">
-                  <a href={target}>
-                    <EntryIcon name={e.name} isDir={e.isDir} />
-                    <span>{e.name}</span>
-                  </a>
+                  {/* A <Link>, not an <a>: a plain link reloads the whole page
+                      and the workbench around it. Files the workbench cannot
+                      show go to their bytes in a new browser tab instead. */}
+                  {e.isDir || opensInWorkbench(e.name)
+                    ? <Link href={href}>{label}</Link>
+                    : <a href={`/_ctx/file${href}`} target="_blank" rel="noopener">{label}</a>}
                 </td>
                 <td className="num">{formatSize(e.size)}</td>
                 <td className="num">{formatDate(e.created)}</td>

@@ -95,7 +95,7 @@ emits. Split on 9 Sep 2026.
 
 **Documents opt into components by class name: `public/components.css`.**
 Four stylesheets, four remits, loaded in this order: `themes.css` (every
-colour and type token), `viewer.css` (the workbench and ordinary HTML),
+colour, and nothing else), `viewer.css` (the workbench and ordinary HTML),
 `components.css` (building blocks a note can use), `custom.css` (yours).
 
 A note that wants a card, a status pill and a row of metadata had two options
@@ -218,11 +218,12 @@ before paint by `theme.js`.
 **Document typography is one fixed setting, not a choice.** There was a second
 axis, `data-doc-theme`, with twelve named ways to set a page (notebook,
 editorial, typewriter, book, manuscript, and so on). It is gone: removed 10 Sep
-2026 because nobody wanted to pick one. The `--doc-*` tokens it varied are
-still there and still load-bearing (face, size, leading, tracking, heading
-scale, `--doc-gap`, measure), now stated once on bare `:root` at the values the
-old swiss-tight default used. Do not reintroduce a per-document layout class or
-a second theme attribute to bring it back.
+2026 because nobody wanted to pick one. The `--doc-*` type tokens it varied
+(face, size, leading, tracking, heading scale, `--doc-gap`, measure) went on 11
+Sep 2026: a theme must not affect content, so type and spacing are plain values
+in `viewer.css` and `components.css`, and `themes.css` holds colour only. Do
+not reintroduce a per-document layout class, a second theme attribute, or a
+spacing token in `themes.css` to bring it back.
 
 What must keep working, and what the removal was checked against: a document's
 paper and ink follow the UI theme (`--doc-paper: var(--paper)`, `--doc-ink:
