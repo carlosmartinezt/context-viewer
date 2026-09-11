@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import type { ReactNode } from 'react'
+import type { PointerEvent as ReactPointerEvent, ReactNode } from 'react'
 import type { Tree as TreeData } from '@/lib/types'
 import { Tree } from './Tree'
 import { Minimap } from './Minimap'
@@ -25,6 +25,10 @@ import { ACTIVITY_ICONS, EntryIcon } from './icons'
 
 interface Target { path: string; name: string; isDir: boolean }
 
+/** Where the sidebar stops being a column and becomes a drawer. The same
+ *  width as the narrow block in viewer.css: change both or neither. */
+const NARROW = '(max-width: 800px)'
+
 export function Workbench({
   tree,
   root,
@@ -45,6 +49,11 @@ export function Workbench({
   const { tabs, close, closeMany, rename } = useTabs(currentPath)
   const [view, setView] = useState<'explorer' | 'scm'>('explorer')
   const [sidebarHidden, setSidebarHidden] = useState(false)
+  // On a narrow screen the sidebar is a drawer over the document, and a
+  // separate state from sidebarHidden: it starts closed, and it closes again
+  // once you have picked something. The server cannot know the width, so the
+  // stylesheet hides the sidebar there unless this is set, and nothing flashes.
+  const [drawer, setDrawer] = useState(false)
   const [panelHidden, setPanelHidden] = useState(true)
   const [minimapHidden, setMinimapHidden] = useState(false)
   const [menu, setMenu] = useState<'none' | 'root' | 'ui'>('none')
@@ -56,6 +65,7 @@ export function Workbench({
   // The path a delete or a rename is moving us off. The tree is refreshed on
   // the other side of that navigation, never in the same tick as it.
   const [leaving, setLeaving] = useState<string | null>(null)
+  const benchRef = useRef<HTMLDivElement>(null)
   const paneRef = useRef<HTMLDivElement>(null)
   const activeTabRef = useRef<HTMLAnchorElement>(null)
   // isPending is the real thing, not a timer: the spin stops when the server
@@ -64,7 +74,7 @@ export function Workbench({
   const [refreshing, startRefresh] = useTransition()
   const dialog = useDialog()
 
-  const open = useCallback((href: string) => { router.push(href) }, [router])
+  const open = useCallback((href: string) => { setDrawer(false); router.push(href) }, [router])
 
   /** The other half of afterFileChange: the push has landed, so now the
    *  layout can be asked for a tree with the deleted file gone from it. */
@@ -99,6 +109,63 @@ export function Workbench({
     try { setMinimapHidden(localStorage.getItem('cvMinimap') === 'false') } catch {}
   }, [])
 
+  // The sidebar's width and the panel's height are remembered per browser too.
+  useEffect(() => {
+    for (const s of Object.values(SASHES)) {
+      try {
+        const px = Number(localStorage.getItem(s.key))
+        if (px) benchRef.current?.style.setProperty(s.prop, `${px}px`)
+      } catch {}
+    }
+  }, [])
+
+  /**
+   * Drag a handle to resize. The size is a custom property on the workbench,
+   * written straight to the element while dragging rather than through state:
+   * a re-render per pointermove would rebuild the whole tree on every pixel.
+   * Pointer capture keeps the moves coming when the pointer outruns the
+   * handle, and `data-resizing` turns off the document frame's pointer events,
+   * because an iframe swallows every move made over it. Double click resets.
+   */
+  const resize = useCallback((axis: 'x' | 'y') => (e: ReactPointerEvent<HTMLDivElement>) => {
+    const bench = benchRef.current
+    if (e.button !== 0 || !bench) return
+    e.preventDefault()
+    const s = SASHES[axis]
+    const handle = e.currentTarget
+    const target = bench.querySelector<HTMLElement>(s.target)
+    if (!target) return
+    const from = axis === 'x' ? target.offsetWidth : target.offsetHeight
+    const start = axis === 'x' ? e.clientX : e.clientY
+    let px = from
+    handle.setPointerCapture(e.pointerId)
+    handle.classList.add('ctx-dragging')
+    bench.dataset.resizing = axis
+    const move = (ev: PointerEvent) => {
+      const delta = (axis === 'x' ? ev.clientX : ev.clientY) - start
+      // The panel sits below its handle, so dragging up makes it taller.
+      const max = (axis === 'x' ? innerWidth : innerHeight) * s.max
+      px = Math.round(Math.min(max, Math.max(s.min, axis === 'x' ? from + delta : from - delta)))
+      bench.style.setProperty(s.prop, `${px}px`)
+    }
+    const up = () => {
+      handle.removeEventListener('pointermove', move)
+      handle.removeEventListener('pointerup', up)
+      handle.removeEventListener('pointercancel', up)
+      handle.classList.remove('ctx-dragging')
+      delete bench.dataset.resizing
+      try { localStorage.setItem(s.key, String(px)) } catch {}
+    }
+    handle.addEventListener('pointermove', move)
+    handle.addEventListener('pointerup', up)
+    handle.addEventListener('pointercancel', up)
+  }, [])
+
+  const resetSize = useCallback((axis: 'x' | 'y') => () => {
+    benchRef.current?.style.removeProperty(SASHES[axis].prop)
+    try { localStorage.removeItem(SASHES[axis].key) } catch {}
+  }, [])
+
   // A framed document asks the workbench to open links, since navigating the
   // frame itself would leave the tabs and the URL pointing at the old file.
   useEffect(() => {
@@ -127,7 +194,7 @@ export function Workbench({
       if (el?.closest?.('[data-menu], [data-menu-toggle]')) return
       setMenu('none'); setRowMenu(null); setTabMenu(null)
     }
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') dismiss() }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { dismiss(); setDrawer(false) } }
     document.addEventListener('click', dismiss)
     document.addEventListener('keydown', onKey)
     return () => {
@@ -189,7 +256,10 @@ export function Workbench({
   const crumbs = currentPath.split('?')[0].split('/').filter(Boolean)
 
   return (
-    <div className={`ctx-workbench${sidebarHidden ? ' sidebar-hidden' : ''}`}>
+    <div
+      ref={benchRef}
+      className={`ctx-workbench${sidebarHidden ? ' sidebar-hidden' : ''}${drawer ? ' drawer-open' : ''}`}
+    >
       <nav className="ctx-activity">
         {(['explorer', 'scm'] as const).map((v) => (
           <button
@@ -198,6 +268,7 @@ export function Workbench({
             aria-selected={view === v}
             title={v === 'explorer' ? 'Explorer' : 'Source control'}
             onClick={() => {
+              if (matchMedia(NARROW).matches) { setDrawer(!(drawer && view === v)); setView(v); return }
               if (view === v) setSidebarHidden((h) => !h)
               else { setView(v); setSidebarHidden(false) }
             }}
@@ -285,7 +356,10 @@ export function Workbench({
           <SourceControl onCount={(n, b) => { setChanges(n); setBranch(b) }} />
         </div>
       </aside>
-      <div className="ctx-resize-x" />
+      {/* Behind the open drawer: tapping the document beside it closes it.
+          Positioned, so it takes no grid cell of its own. */}
+      {drawer ? <div className="ctx-scrim" onClick={() => setDrawer(false)} /> : null}
+      <div className="ctx-resize-x" onPointerDown={resize('x')} onDoubleClick={resetSize('x')} />
 
       <section className="ctx-editor">
         <div className="ctx-tabs">
@@ -348,7 +422,7 @@ export function Workbench({
         </div>
       </section>
 
-      <div className="ctx-resize-y" style={{ gridColumn: '2 / -1' }} />
+      <div className="ctx-resize-y" onPointerDown={resize('y')} onDoubleClick={resetSize('y')} />
       <AgentPanel
         hidden={panelHidden}
         onClose={() => setPanelHidden(true)}
@@ -442,6 +516,12 @@ export function Workbench({
     </div>
   )
 }
+
+/** The two drag handles: what each resizes, its bounds, where it is kept. */
+const SASHES = {
+  x: { target: '.ctx-sidebar', prop: '--sidebar-w', key: 'cvSidebarWidth', min: 160, max: 0.6 },
+  y: { target: '.ctx-panel', prop: '--panel-h', key: 'cvPanelHeight', min: 120, max: 0.8 },
+} as const
 
 async function post<T = unknown>(url: string, body: unknown): Promise<T> {
   const res = await fetch(url, {

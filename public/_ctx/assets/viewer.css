@@ -68,6 +68,7 @@ a { color: var(--accent); }
      and reads as cramped for "meeting notes from the quarterly planning session". */
   --row: 26px;
   --activity: 48px;
+  --status: 22px;
   /* One step of tree nesting. VS Code's 8px is legible against its own 22px
      rows and always-on guides; here it left a folder's children looking like
      its siblings, so the step is wider and the guides are always drawn. */
@@ -92,8 +93,11 @@ a { color: var(--accent); }
 .ctx-workbench {
   display: grid;
   grid-template-columns: var(--activity) auto 4px 1fr;
-  grid-template-rows: 1fr auto auto 22px;
+  grid-template-rows: 1fr auto auto var(--status);
   height: 100vh;
+  /* The visible height on a phone, between the address bar and the toolbar.
+     100vh is the height with both retracted, so the status bar sat under them. */
+  height: 100dvh;
   overflow: hidden;
   font-family: var(--ui);
   font-size: var(--ui-size);
@@ -217,7 +221,7 @@ a { color: var(--accent); }
 /* ── Sidebar ────────────────────────────────────────────── */
 
 .ctx-sidebar {
-  width: 260px;
+  width: var(--sidebar-w, 260px);
   display: flex;
   flex-direction: column;
   background: var(--chrome);
@@ -290,10 +294,18 @@ a { color: var(--accent); }
 .ctx-view { flex: 1; overflow: auto; padding-bottom: 1rem; }
 .ctx-view[hidden] { display: none; }
 
-/* Drag handles. Two pixels of hit area, invisible until used. */
-.ctx-resize-x, .ctx-resize-y { background: none; }
+/* Drag handles, wired up in Workbench.tsx. Four pixels of hit area, invisible
+   until used. The panel's handle sits in an `auto` row, so it needs a height
+   of its own or it is zero pixels tall and cannot be grabbed. */
+.ctx-resize-x, .ctx-resize-y { background: none; touch-action: none; }
 .ctx-resize-x { cursor: col-resize; }
-.ctx-resize-y { cursor: row-resize; }
+.ctx-resize-y { cursor: row-resize; height: 4px; }
+/* While dragging: an iframe swallows every pointer move made over it, and a
+   drag should not select the text it passes. */
+.ctx-workbench[data-resizing] { user-select: none; }
+.ctx-workbench[data-resizing] iframe { pointer-events: none; }
+.ctx-workbench[data-resizing="x"] { cursor: col-resize; }
+.ctx-workbench[data-resizing="y"] { cursor: row-resize; }
 .ctx-panel[hidden] + .ctx-resize-y, .ctx-resize-y:has(+ .ctx-panel[hidden]) { display: none; }
 .ctx-resize-x:hover, .ctx-resize-y:hover, .ctx-dragging { background: var(--focus); }
 
@@ -630,7 +642,7 @@ a { color: var(--accent); }
 .ctx-panel {
   display: flex;
   flex-direction: column;
-  height: 260px;
+  height: var(--panel-h, 260px);
   background: var(--bg);
   border-top: 1px solid var(--chrome-line);
   overflow: hidden;
@@ -682,7 +694,7 @@ a { color: var(--accent); }
   display: flex;
   align-items: center;
   gap: 16px;
-  height: 22px;
+  height: var(--status);
   padding: 0 10px;
   background: var(--chrome);
   border-top: 1px solid var(--chrome-line);
@@ -720,19 +732,6 @@ a { color: var(--accent); }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
-}
-
-@media (max-width: 800px) {
-  /* Still four columns. Dropping to three left every grid-area behind, since
-     they are written against the four-column line numbers: the editor landed
-     in an implicit fifth column and the status bar's -1 stopped short of it,
-     leaving the bar 48px wide with the open file's path squeezed to nothing.
-     The sidebar floats over the workbench here, so its column and the drag
-     handle beside it collapse to zero instead of disappearing. */
-  .ctx-workbench { grid-template-columns: var(--activity) 0 0 1fr; }
-  .ctx-sidebar { position: absolute; left: var(--activity); top: 0; bottom: 22px; z-index: 4; width: 260px; }
-  .ctx-resize-x { display: none; }
-  .ctx-minimap { display: none; }
 }
 
 /* ── Folder listing ─────────────────────────────────────── */
@@ -1016,25 +1015,93 @@ a { color: var(--accent); }
   cursor: pointer;
 }
 
-/* ── Narrow screens: the tree folds away behind a toggle ── */
+/* ── Narrow screens and touch ───────────────────────────── */
 
-:is(button, a, select, textarea, input, .ctx-row):focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: -2px;
+/* Last in the file on purpose: these are overrides, and at equal specificity
+   the later rule wins. Two separate questions, asked separately: how wide the
+   screen is (a phone, a split window) and whether the pointer is a finger (a
+   phone, but also a tablet that is wide enough for the desktop layout). */
+
+.ctx-scrim { display: none; }
+
+@media (max-width: 800px) {
+  /* Still four columns. Dropping to three left every grid-area behind, since
+     they are written against the four-column line numbers: the editor landed
+     in an implicit fifth column and the status bar's -1 stopped short of it,
+     leaving the bar 48px wide with the open file's path squeezed to nothing.
+     The sidebar floats over the workbench here, so its column and the drag
+     handle beside it collapse to zero instead of disappearing. */
+  :root { --activity: 44px; }
+  .ctx-workbench { grid-template-columns: var(--activity) 0 0 1fr; }
+
+  /* The sidebar is a drawer: closed until asked for (drawer-open is set by
+     Workbench, never by the server, so a phone does not open on a wall of
+     tree), and closed again once a file is picked. sidebar-hidden is the
+     desktop's toggle and means nothing here. */
+  .ctx-sidebar {
+    position: absolute;
+    left: var(--activity);
+    top: 0;
+    bottom: var(--status);
+    z-index: 6;
+    width: min(300px, calc(100vw - var(--activity) - 40px));
+    box-shadow: 8px 0 28px -12px var(--shadow);
+  }
+  .ctx-workbench:not(.drawer-open) .ctx-sidebar { display: none; }
+  .ctx-workbench.drawer-open .ctx-sidebar { display: flex; }
+  /* The activity bar stays uncovered, so its buttons still switch views. */
+  .ctx-scrim {
+    display: block;
+    position: fixed;
+    inset: 0 0 0 var(--activity);
+    z-index: 5;
+    background: color-mix(in srgb, #000 28%, transparent);
+  }
+
+  .ctx-resize-x, .ctx-resize-y, .ctx-minimap { display: none; }
+  /* No drag handle here, so the panel is a fixed share of the screen: enough
+     to read an answer, with the document still visible above it. */
+  .ctx-panel { height: 50dvh; }
+
+  /* A context menu opened at the pointer runs off a narrow screen, and the ⋮
+     sits at the right edge, so it always did. Here it is a sheet along the
+     bottom instead. !important because the pointer position is inline. */
+  .ctx-context {
+    position: fixed;
+    top: auto !important;
+    left: 8px !important;
+    right: 8px;
+    bottom: calc(var(--status) + 8px);
+  }
+  /* The theme list opens over its menu rather than beside it: beside it is
+     past the right edge of a 360px screen. */
+  .ctx-themes { left: 24px; bottom: 0; }
+
+  /* The listing keeps name, size and modified. Created is the column you miss
+     least, and rename/delete are in the tree's ⋮ menu. */
+  .cv-index :is(th, td):nth-child(3), .cv-index .act { display: none; }
 }
 
-/* An empty panel should say what it is for rather than sit blank. */
-.ctx-empty-hint {
-  padding: 10px 14px;
-  color: var(--muted);
-  font-size: 12px;
-  font-family: var(--ui);
-}
-.ctx-empty h1 { font-size: 1.1rem; }
-.ctx-empty p { color: var(--muted); }
+@media (pointer: coarse) {
+  /* A fingertip is about 40px; 26px rows are a mis-tap waiting to happen. */
+  :root { --row: 36px; --status: 30px; }
+  .ctx-status { font-size: 12px; }
 
-@media (prefers-reduced-motion: reduce) {
-  * { transition: none !important; animation: none !important; }
+  /* There is no hover on a touchscreen, so nothing may depend on it. The ⋮ is
+     the only way to reach rename and delete from the tree (iOS fires no
+     contextmenu on a long press), so it is always drawn, and wide enough to hit. */
+  .ctx-dots { opacity: 0.6; align-self: stretch; padding: 0 10px; }
+  .cv-index .act button { opacity: 1; }
+  .ctx-sidebar .ctx-refresh { opacity: 1; padding: 6px; }
+  .ctx-tab .close { width: 28px; height: 28px; opacity: 0.6; }
+  .ctx-menu button { padding: 10px 12px; }
+  .ctx-panel header .hint { display: none; }
+  .ctx-panel header button { padding: 4px 10px; font-size: 18px; }
+
+  /* iOS zooms the page into any field under 16px when it takes focus, and
+     does not zoom back out. !important because every form in the app sets
+     its own smaller size, and this has to beat all of them. */
+  :is(input, textarea, select) { font-size: 16px !important; }
 }
 
 
