@@ -29,7 +29,7 @@ export const metadata: Metadata = {
  */
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ece8e0' },
+    { media: '(prefers-color-scheme: light)', color: '#f8fafd' },
     { media: '(prefers-color-scheme: dark)', color: '#1f1d1b' },
   ],
 }
@@ -54,11 +54,12 @@ function hasCustomCss(): boolean {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" data-ui-theme="chrome" suppressHydrationWarning>
       <head>
         <link rel="stylesheet" href="/_ctx/assets/themes.css" />
         <link rel="stylesheet" href="/_ctx/assets/viewer.css" />
         <link rel="stylesheet" href="/_ctx/assets/components.css" />
+        <link rel="stylesheet" href="/_ctx/assets/chrome.css" />
         {hasCustomCss() ? <link rel="stylesheet" href="/_ctx/assets/custom.css" /> : null}
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>

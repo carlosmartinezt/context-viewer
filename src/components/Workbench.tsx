@@ -63,6 +63,15 @@ export function Workbench({
   const [changes, setChanges] = useState(0)
   const [branch, setBranch] = useState('')
   const [revision, setRevision] = useState(0)
+  // The chosen theme, for the menu's tick. Read on mount, not during render:
+  // the server always renders the default, and hydration keeps what it sent.
+  const [theme, setTheme] = useState('')
+  // A saved theme that no longer exists falls back to the default.
+  useEffect(() => {
+    const saved = currentTheme()
+    if (!UI_THEMES.some(([name]) => name === saved)) applyTheme(UI_THEMES[0][0])
+    setTheme(currentTheme())
+  }, [])
   // The path a delete or a rename is moving us off. The tree is refreshed on
   // the other side of that navigation, never in the same tick as it.
   const [leaving, setLeaving] = useState<string | null>(null)
@@ -271,6 +280,9 @@ export function Workbench({
       className={`ctx-workbench${sidebarHidden ? ' sidebar-hidden' : ''}${drawer ? ' drawer-open' : ''}`}
     >
       <nav className="ctx-activity">
+        <a href="/" className="ctx-logo" title="Home" onClick={(e) => { e.preventDefault(); open('/') }}>
+          <img src="/_ctx/assets/icon.svg" alt="context-viewer" />
+        </a>
         {(['explorer', 'scm'] as const).map((v) => (
           <button
             key={v}
@@ -310,8 +322,8 @@ export function Workbench({
             {UI_THEMES.map(([name, label]) => (
               <button
                 key={name}
-                aria-selected={currentTheme() === name}
-                onClick={() => { applyTheme(name); setMenu('none'); setRevision((r) => r + 1) }}
+                aria-selected={theme === name}
+                onClick={() => { applyTheme(name); setTheme(name); setMenu('none'); setRevision((r) => r + 1) }}
               >
                 {label}
               </button>

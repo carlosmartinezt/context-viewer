@@ -24,8 +24,8 @@ export default function manifest(): MetadataRoute.Manifest {
     display: 'standalone',
     // The desk, not the paper: it is what fills the window before anything is
     // open, and what the title bar takes its colour from.
-    background_color: '#ece8e0',
-    theme_color: '#ece8e0',
+    background_color: '#f8fafd',
+    theme_color: '#f8fafd',
     orientation: 'any',
     icons: [
       { src: '/_ctx/assets/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },

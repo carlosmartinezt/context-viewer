@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="96" fill="#ece8e0"/>
+  <rect width="512" height="512" rx="96" fill="#c2e7ff"/>
   <g transform="translate(256 262) scale(1.5) translate(-256 -155)">
-    <g fill="#e0819a">
+    <g fill="#0b57d0">
       <circle cx="206" cy="150" r="58"/>
       <circle cx="176" cy="196" r="46"/>
       <circle cx="232" cy="108" r="46"/>
@@ -10,7 +10,7 @@
       <circle cx="280" cy="108" r="46"/>
       <ellipse cx="256" cy="206" rx="118" ry="42"/>
     </g>
-    <g fill="none" stroke="#fdfcfa" stroke-width="11" stroke-linecap="round">
+    <g fill="none" stroke="#ffffff" stroke-width="11" stroke-linecap="round">
       <path d="M256 78 V238"/>
       <path d="M214 104 q22 14 8 44"/>
       <path d="M160 176 q28 -4 42 22"/>

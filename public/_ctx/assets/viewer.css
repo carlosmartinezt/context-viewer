@@ -139,6 +139,9 @@ a { color: var(--accent); }
   color: var(--text);
   border-left-color: var(--focus);
 }
+/* The app's icon, top left, and a way home. */
+.ctx-logo { display: grid; place-items: center; width: var(--activity); height: var(--activity); flex: none; }
+.ctx-logo img { width: 32px; height: 32px; }
 .ctx-activity .spacer { flex: 1; }
 .ctx-activity svg {
   width: 22px;
@@ -216,6 +219,7 @@ a { color: var(--accent); }
   overflow-y: auto;
 }
 .ctx-themes button[aria-selected="true"] { background: var(--selected); }
+.ctx-themes button[aria-selected="true"]::after { content: "✓"; }
 
 /* ── Sidebar ────────────────────────────────────────────── */
 
@@ -915,7 +919,7 @@ a { color: var(--accent); }
 /* A hint under a field is part of the field, not a paragraph after it. */
 :is(.cv-card, .cv-settings) label .cv-hint { margin: 0.1rem 0 0; font-size: 0.72rem; }
 :is(.cv-card, .cv-settings) label.cv-checkbox { flex-direction: row; align-items: center; }
-:is(.cv-card, .cv-settings) :is(input[type="text"], input[type="password"]) {
+:is(.cv-card, .cv-settings) input:not([type="checkbox"], [type="radio"]) {
   font: inherit;
   font-size: 0.85rem;
   width: 100%;
@@ -925,7 +929,7 @@ a { color: var(--accent); }
   background: var(--card);
   color: var(--text);
 }
-:is(.cv-card, .cv-settings) :is(input[type="text"], input[type="password"]):focus {
+:is(.cv-card, .cv-settings) input:not([type="checkbox"], [type="radio"]):focus {
   outline: none;
   border-color: var(--focus);
   box-shadow: 0 0 0 3px var(--ring);
@@ -1148,7 +1152,9 @@ a { color: var(--accent); }
   cursor: pointer;
   transition: background-color 0.14s ease, color 0.14s ease;
 }
-.ctx-dialog-actions button:hover { background: var(--hover-strong); }
+/* Not the filled buttons: this rule outweighs .danger, and hovering Delete
+   swapped its red for a grey wash under white text. */
+.ctx-dialog-actions button:not(.primary, .danger):hover { background: var(--hover-strong); }
 .ctx-dialog-actions .primary {
   color: var(--on-focus);
   background: var(--focus);

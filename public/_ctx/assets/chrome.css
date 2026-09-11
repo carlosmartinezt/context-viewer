@@ -1,0 +1,131 @@
+/*
+  The Chrome theme's shape: Google Drive's type, spacing, pills and rounded
+  surfaces. Chrome is the default, and its colours are the default token
+  block in themes.css. The root layout renders data-ui-theme="chrome", so
+  this applies before any choice has been saved.
+
+  Everything here is scoped to the theme, so no other theme sees any of it,
+  and it styles the workbench only: documents keep the fixed typography in
+  viewer.css, because a theme must not change content.
+*/
+
+:root[data-ui-theme="chrome"] {
+  --ui: "Google Sans", "Google Sans Text", Roboto, "Segoe UI", system-ui, sans-serif;
+  --ui-size: 14px;
+  --row: 32px;
+  --activity: 56px;
+  --status: 28px;
+  --ctx-indent: 16px;
+  --pill: 20px;
+  --elevation: 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 6px 2px rgba(0, 0, 0, 0.15);
+
+  body { letter-spacing: 0; }
+
+  /* The desk has no lines: surfaces are told apart by tone alone. */
+  .ctx-workbench { background: var(--chrome); }
+  .ctx-activity, .ctx-sidebar, .ctx-status, .ctx-panel, .ctx-panel header,
+  .ctx-prompt, .ctx-breadcrumbs { border: none; }
+
+  /* Icon buttons are circles, and the chosen view gets the blue pill. */
+  .ctx-activity { padding-top: 8px; gap: 4px; }
+  .ctx-activity button { width: 40px; height: 40px; border: none; border-radius: 50%; }
+  .ctx-activity button[aria-selected="true"] { background: var(--selected); }
+  .ctx-activity svg { width: 20px; height: 20px; }
+  /* 40px, 8px in from the top and the left, as Drive sits its logo. */
+  .ctx-logo { height: 40px; margin-bottom: 8px; }
+  .ctx-logo img { width: 40px; height: 40px; }
+
+  .ctx-sidebar h2 {
+    padding: 16px 20px 8px;
+    font-size: 14px;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--text);
+  }
+
+  /* Tree rows are pills with a margin, Drive's nav, and no indent guides. */
+  .ctx-tree ul::before { display: none; }
+  .ctx-row { margin: 0 12px; border: none; border-radius: 16px; }
+  .ctx-row[aria-current] { font-weight: 500; }
+
+  /* The editor and the panel are white cards on the desk. */
+  .ctx-editor, .ctx-panel { margin-right: 16px; border-radius: 16px; background: var(--paper); }
+  .ctx-editor { margin-top: 8px; }
+
+  /* Tabs become Drive's filter chips. */
+  .ctx-tabs { gap: 8px; padding: 16px 20px 0; background: var(--paper); }
+  .ctx-tab {
+    flex: none;
+    height: 32px;
+    padding: 0 4px 0 12px;
+    border: 1px solid var(--chrome-line);
+    border-radius: 8px;
+    box-shadow: none;
+  }
+  .ctx-tab[aria-selected="true"] { background: var(--selected); border-color: var(--selected); box-shadow: none; }
+
+  /* The breadcrumb is the page title, as "My Drive > Projects" is. */
+  .ctx-breadcrumbs { height: 56px; padding: 0 24px; font-size: 20px; }
+  .ctx-breadcrumbs [data-crumbs] { gap: 8px; }
+  .ctx-breadcrumbs :is(button, select, .right) { font-size: 14px; }
+  .ctx-doc:not(:has(iframe)) { padding: 0 24px 16px; }
+
+  /* The listing, row for row. */
+  .cv-index :is(th, td) { border-color: var(--border); }
+  .cv-index th { height: 48px; padding: 0; }
+  .cv-index th:first-child, .cv-index .name a { padding-left: 12px; }
+  .cv-index th a { font-size: 14px; font-weight: 500; color: var(--text); text-transform: capitalize; }
+  .cv-index .name a { min-height: 48px; padding-block: 0; font-weight: 500; }
+  .cv-index :is(.num, .act) { font-family: var(--ui); font-size: 14px; color: var(--muted); }
+
+  /* Menus: no border, square items, a real elevation. */
+  .ctx-menu { padding: 8px 0; border: none; border-radius: 4px; box-shadow: var(--elevation); }
+  .ctx-menu button { min-height: 32px; padding-inline: 16px; border-radius: 0; }
+  .ctx-menu button:hover { background: var(--hover-strong); }
+
+  /* The agent reads like Drive's search box: a tinted pill. */
+  .ctx-panel { margin-top: 4px; }
+  .ctx-panel header { padding: 12px 20px 0; font-size: 14px; text-transform: none; letter-spacing: 0; }
+  .ctx-panel header .title { color: var(--accent); border-bottom-width: 3px; font-weight: 500; }
+  .ctx-log { padding: 12px 20px; font-family: var(--ui); font-size: 14px; }
+  .ctx-prompt { align-items: center; padding: 8px 16px 16px; }
+  .ctx-prompt textarea {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 24px;
+    background: #e9eef6;
+    font-family: var(--ui);
+    font-size: 14px;
+  }
+
+  .ctx-status { padding: 0 20px; font-size: 12px; }
+
+  /* Buttons are pills, fields are outlined, cards and dialogs are round. */
+  :is(.ctx-prompt, .ctx-scm, .cv-card, .cv-settings, .ctx-dialog-actions) button {
+    border-radius: var(--pill);
+    font-weight: 500;
+  }
+  .ctx-prompt button { height: 40px; padding: 0 24px; background: var(--accent); }
+  :is(.cv-card, .cv-settings) button { padding: 10px 24px; }
+  :is(.cv-card, .cv-settings) input:not([type="checkbox"], [type="radio"]), .ctx-dialog input { padding: 12px 16px; border-color: #747775; }
+  .ctx-scm textarea { border-radius: 8px; }
+
+  .cv-card { padding: 36px 40px; border: none; border-radius: 28px; box-shadow: none; }
+  .cv-card h1 { font-size: 24px; font-weight: 400; }
+
+  .ctx-dialog { border: none; border-radius: 28px; box-shadow: var(--elevation); }
+  .ctx-dialog form { padding: 24px; }
+  .ctx-dialog h2 { font-size: 24px; font-weight: 400; }
+  .ctx-dialog p { font-size: 14px; }
+  .ctx-dialog-actions button { height: 40px; padding: 0 24px; }
+  .ctx-dialog-actions button:not(.primary, .danger) { border: none; background: none; color: var(--accent); }
+  .ctx-dialog-actions button:not(.primary, .danger):hover { background: var(--hover); }
+
+  @media (pointer: coarse) { --row: 40px; }
+  @media (max-width: 800px) {
+    .ctx-editor, .ctx-panel { margin-right: 8px; }
+    .ctx-tabs { padding: 12px 12px 0; }
+    .ctx-breadcrumbs { padding: 0 12px; }
+    .ctx-doc:not(:has(iframe)) { padding: 0 12px 12px; }
+  }
+}

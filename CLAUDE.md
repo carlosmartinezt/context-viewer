@@ -189,7 +189,7 @@ there to sync.
 
 *So `components.css` has to stand on its own.* It is loaded inside a note with
 no `themes.css` under it, so every theme token it reads carries the default
-theme's value as its fallback: `var(--paper, #fdfcfa)` and so on. Adding a
+theme's value as its fallback: `var(--paper, #ffffff)` and so on. Adding a
 token to that file means giving it a fallback too, or the component loses its
 colour in exactly the place the file exists to serve.
 
@@ -204,16 +204,27 @@ than before it, or the page renders in quirks mode.
 `--paper`, `--chrome`, `--accent` and the rest), and it lives in
 `public/_ctx/assets/themes.css`, which loads before `viewer.css`. Nothing in
 `viewer.css` hard-codes a colour, so adding a theme is one `:root[...]` block
-and no new selectors, ever. The default is Paper. Adding one means adding its
+and no new selectors, ever. The default is Chrome. Adding one means adding its
 name to `UI_THEMES` in `src/components/themes.ts`; a dark one also goes in the
 shared dark selector in `themes.css`, which is where `--hover`, the status inks
 and `color-scheme: dark` come from.
 
-The fifteen colour themes are ports of VS Code's (Light+, Quiet Light, Dark+,
-Dark Modern, Abyss, Monokai, Solarized both ways, Kimbie, Red, Tomorrow Night
-Blue, both high contrasts), plus Paper, this app's own warm light theme and
-the default. The choice is remembered per browser (`cvUiTheme`) and applied
-before paint by `theme.js`.
+Chrome, Google Drive's look, is first and the default. The other ten are
+ports of VS Code's (Light+, Quiet Light, Dark+, Dark Modern, Abyss, Monokai,
+Monokai Dimmed, Kimbie, Red, Tomorrow Night Blue). Paper, both Solarized and
+both high contrasts were removed on 11 Sep 2026 at Carlos's request; a browser
+that still has one saved is moved to Chrome on mount. The choice is remembered
+per browser (`cvUiTheme`) and applied before paint by `theme.js`.
+
+**Chrome is the one theme with a shape.** Asked for on 11 Sep 2026: Google
+Drive's look, not only its colours. The colours are the default token block
+in `themes.css`; the radii, spacing, pills and type are
+`public/_ctx/assets/chrome.css`, every rule nested under
+`:root[data-ui-theme="chrome"]`, so no other theme sees any of it. The root
+layout renders `data-ui-theme="chrome"` on `<html>` so the shape applies
+before anything is saved. It styles
+the workbench only, never document content. Do not grow the pattern into a
+second theme axis; a new theme is still one token block.
 
 **Document typography is one fixed setting, not a choice.** There was a second
 axis, `data-doc-theme`, with twelve named ways to set a page (notebook,

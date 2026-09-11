@@ -40,11 +40,11 @@
    the two status inks, the drop shadow, and ink on an accent-filled button.
    Light values here; the dark themes flip the first three below. */
 :root {
-  --hover: rgba(0, 0, 0, 0.035);
-  --hover-strong: rgba(0, 0, 0, 0.09);
-  --danger: #b4453a;
-  --ok: #4a7a4a;
-  --shadow: rgba(38, 35, 31, 0.25);
+  --hover: rgba(68, 71, 70, 0.08);
+  --hover-strong: rgba(68, 71, 70, 0.12);
+  --danger: #b3261e;
+  --ok: #146c2e;
+  --shadow: rgba(0, 0, 0, 0.3);
   /* Ink on a filled surface. Two of them, because --accent and --focus are
      different colours in most themes and a theme with a pale accent needs
      dark ink on its buttons: white on #4daafc is not readable. Each theme
@@ -64,9 +64,8 @@
 :root:is(
   [data-ui-theme="dark-plus"], [data-ui-theme="dark-modern"],
   [data-ui-theme="abyss"], [data-ui-theme="monokai"],
-  [data-ui-theme="monokai-dimmed"], [data-ui-theme="solarized-dark"],
-  [data-ui-theme="kimbie-dark"], [data-ui-theme="red"],
-  [data-ui-theme="tomorrow-night-blue"], [data-ui-theme="high-contrast-dark"]
+  [data-ui-theme="monokai-dimmed"], [data-ui-theme="kimbie-dark"],
+  [data-ui-theme="red"], [data-ui-theme="tomorrow-night-blue"]
 ) {
   --hover: rgba(255, 255, 255, 0.06);
   --hover-strong: rgba(255, 255, 255, 0.13);
@@ -78,22 +77,23 @@
   color-scheme: dark;
 }
 
-/* Paper — this app's own light theme, and the default. Warm, low contrast,
-   a desk with a sheet on it. Not a port of anything. */
-:root, :root[data-ui-theme="paper"] {
-  --bg: #faf8f4;
-  --panel: #f3efe8;
-  --card: #fffefb;
-  --text: #26231f;
-  --muted: #6f6960;
-  --border: #e7e1d8;
-  --accent: #9a5d39;
-  --chrome: #ece8e0;
-  --chrome-line: #ddd7cc;
-  --chrome-text: #57514a;
-  --paper: #fdfcfa;
-  --selected: rgba(154, 93, 57, 0.1);
-  --focus: #9a5d39;
+/* Chrome, the default: Google Drive's palette. The one theme that also
+   changes shape, in chrome.css, because the look was asked for and not only
+   the colours. */
+:root, :root[data-ui-theme="chrome"] {
+  --bg: #ffffff;
+  --panel: #f0f4f9;
+  --card: #ffffff;
+  --text: #1f1f1f;
+  --muted: #444746;
+  --border: #e1e3e1;
+  --accent: #0b57d0;
+  --chrome: #f8fafd;
+  --chrome-line: #c4c7c5;
+  --chrome-text: #444746;
+  --paper: #ffffff;
+  --selected: #c2e7ff;
+  --focus: #0b57d0;
 }
 
 /* ── Light ─────────────────────────────────────────────── */
@@ -128,22 +128,6 @@
   --paper: #f5f5f5;
   --selected: #c9d0d9;
   --focus: #7a3e9d;
-}
-
-:root[data-ui-theme="solarized-light"] {
-  --bg: #fdf6e3;
-  --panel: #eee8d5;
-  --card: #fdf6e3;
-  --text: #586e75;
-  --muted: #93a1a1;
-  --border: #ded8c5;
-  --accent: #268bd2;
-  --chrome: #eee8d5;
-  --chrome-line: #ded8c5;
-  --chrome-text: #586e75;
-  --paper: #fdf6e3;
-  --selected: #dfd9c3;
-  --focus: #268bd2;
 }
 
 /* ── Dark ──────────────────────────────────────────────── */
@@ -233,23 +217,6 @@
   --on-accent: #16181b;
 }
 
-:root[data-ui-theme="solarized-dark"] {
-  --bg: #002b36;
-  --panel: #073642;
-  --card: #00212b;
-  --text: #93a1a1;
-  --muted: #6b8a92;
-  --border: #0b4553;
-  --accent: #2aa198;
-  --chrome: #00212b;
-  --chrome-line: #0b3c49;
-  --chrome-text: #93a1a1;
-  --paper: #002b36;
-  --selected: #073642;
-  --focus: #268bd2;
-  --on-accent: #00212b;
-}
-
 :root[data-ui-theme="kimbie-dark"] {
   --bg: #221a0f;
   --panel: #362712;
@@ -301,41 +268,6 @@
   --on-accent: #002451;
 }
 
-/* High contrast, both directions. Borders do the work light and shade
-   normally would, so the hairline tokens are the ink colour itself. */
-:root[data-ui-theme="high-contrast-dark"] {
-  --bg: #000000;
-  --panel: #0f0f0f;
-  --card: #000000;
-  --text: #ffffff;
-  --muted: #cccccc;
-  --border: #6fc3df;
-  --accent: #3794ff;
-  --chrome: #000000;
-  --chrome-line: #6fc3df;
-  --chrome-text: #ffffff;
-  --selected: #ffffff26;
-  --paper: #000000;
-  --focus: #f38518;
-  --on-accent: #000000;
-  --on-focus: #000000;
-}
-
-:root[data-ui-theme="high-contrast-light"] {
-  --bg: #ffffff;
-  --panel: #f2f2f2;
-  --card: #ffffff;
-  --text: #000000;
-  --muted: #3b3b3b;
-  --border: #000000;
-  --accent: #0f4a85;
-  --chrome: #ffffff;
-  --chrome-line: #000000;
-  --chrome-text: #000000;
-  --paper: #ffffff;
-  --selected: #0f4a8526;
-  --focus: #0f4a85;
-}
 
 /* A document's paper and ink follow the UI theme, so a dark chrome darkens
    the page under the text with it. Colour only: type and spacing are not a

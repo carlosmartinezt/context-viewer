@@ -50,7 +50,7 @@
   --ctx-gray: #7d7871;
   /* The accent a page header rules itself with. A note overrides it inline
      when it wants its own: style="--ctx-accent: #9483a0". */
-  --ctx-accent: var(--accent, #9a5d39);
+  --ctx-accent: var(--accent, #0b57d0);
   /* One rhythm for every component here, derived from the document theme's
      own gap, so components breathe with the typography rather than against
      it: pick swiss-micro and the cards tighten with the prose. */
@@ -102,12 +102,12 @@
   }
   .ctx-meta > div {
     padding: 0.35rem 0;
-    border-bottom: 1px solid var(--border, #e7e1d8);
+    border-bottom: 1px solid var(--border, #e1e3e1);
   }
   .ctx-meta dt {
     margin: 0 0 0.15rem;
     font-size: 0.7rem;
-    color: var(--muted, #6f6960);
+    color: var(--muted, #444746);
   }
   .ctx-meta dd { margin: 0; font-weight: 500; }
 
@@ -129,8 +129,8 @@
   .ctx-card {
     padding: var(--ctx-pad);
     margin: 0 0 0.35rem;
-    background: var(--card, #fffefb);
-    border: 1px solid var(--border, #e7e1d8);
+    background: var(--card, #ffffff);
+    border: 1px solid var(--border, #e1e3e1);
     border-radius: var(--r1, 4px);
   }
   .ctx-card-head {
@@ -142,14 +142,14 @@
   }
   .ctx-card-head > :first-child { flex: 1; min-width: 0; }
   .ctx-card :is(h2, h3, h4):first-child { margin-top: 0; }
-  .ctx-sub { margin: 0.2rem 0 0; font-size: 0.8em; color: var(--muted, #6f6960); }
+  .ctx-sub { margin: 0.2rem 0 0; font-size: 0.8em; color: var(--muted, #444746); }
   /* A closing line inside a card, ruled off from what it comments on. */
   .ctx-note {
     margin: 0.35rem 0 0;
     padding-top: 0.25rem;
-    border-top: 1px solid var(--border, #e7e1d8);
+    border-top: 1px solid var(--border, #e1e3e1);
     font-size: 0.85em;
-    color: var(--muted, #6f6960);
+    color: var(--muted, #444746);
   }
 
   /* ═══════════════════════════════════════════════════════════
@@ -169,8 +169,8 @@
     font-size: 0.72rem;
     font-weight: 500;
     white-space: nowrap;
-    background: color-mix(in srgb, var(--tone, var(--ctx-gray)) 16%, var(--paper, #fdfcfa));
-    color: color-mix(in srgb, var(--tone, var(--ctx-gray)) 65%, var(--text, #26231f));
+    background: color-mix(in srgb, var(--tone, var(--ctx-gray)) 16%, var(--paper, #ffffff));
+    color: color-mix(in srgb, var(--tone, var(--ctx-gray)) 65%, var(--text, #1f1f1f));
   }
   .ctx-tag-done { --tone: var(--ctx-green); }
   .ctx-tag-active { --tone: var(--ctx-amber); }
@@ -192,17 +192,17 @@
   .ctx-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0; }
   .ctx-chip {
     padding: 0.12rem 0.5rem;
-    border: 1px solid var(--border, #e7e1d8);
+    border: 1px solid var(--border, #e1e3e1);
     border-radius: var(--r1, 4px);
     font-size: 0.78em;
-    background: var(--paper, #fdfcfa);
+    background: var(--paper, #ffffff);
   }
   /* Done is struck through as well as tinted: colour alone is not a state
      anybody who cannot see the tint can read. */
   .ctx-chip-done {
-    color: var(--muted, #6f6960);
+    color: var(--muted, #444746);
     text-decoration: line-through;
-    border-color: color-mix(in srgb, var(--ctx-green) 40%, var(--border, #e7e1d8));
+    border-color: color-mix(in srgb, var(--ctx-green) 40%, var(--border, #e1e3e1));
   }
 
   /* ═══════════════════════════════════════════════════════════
@@ -256,7 +256,7 @@
   .ctx-log dt {
     font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
     font-size: 0.85em;
-    color: var(--muted, #6f6960);
+    color: var(--muted, #444746);
     white-space: nowrap;
     padding-top: 0.15em;
   }

@@ -1,26 +1,22 @@
 'use client'
 
 /**
- * Two axes, deliberately separate: the colours of the workbench and the
- * typography of the document. Each name has a block in themes.css and nothing
- * else. Labels are only for the menu.
+ * The colours of the workbench. Each name has a block in themes.css and
+ * nothing else, except Chrome, which also has chrome.css. The first is the
+ * default. Labels are only for the menu.
  */
 export const UI_THEMES: [string, string][] = [
-  ['paper', 'Paper'],
+  ['chrome', 'Chrome'],
   ['light-plus', 'Light+'],
   ['quiet-light', 'Quiet Light'],
-  ['solarized-light', 'Solarized Light'],
-  ['high-contrast-light', 'Light High Contrast'],
   ['dark-plus', 'Dark+'],
   ['dark-modern', 'Dark Modern'],
   ['abyss', 'Abyss'],
   ['monokai', 'Monokai'],
   ['monokai-dimmed', 'Monokai Dimmed'],
-  ['solarized-dark', 'Solarized Dark'],
   ['kimbie-dark', 'Kimbie Dark'],
   ['red', 'Red'],
   ['tomorrow-night-blue', 'Tomorrow Night Blue'],
-  ['high-contrast-dark', 'Dark High Contrast'],
 ]
 
 /**
