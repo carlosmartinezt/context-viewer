@@ -43,13 +43,18 @@ const base = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // Standalone emits .next/standalone/server.js with only the node_modules the
+  // app actually reaches, so what gets served can live in ~/public with no
+  // source tree and no npm install beside it. See ops/build.sh.
+  output: 'standalone',
   /**
    * The served tree is read at runtime, so on a platform that ships only the
    * files it can trace from imports (Vercel and anything else serverless) the
-   * tree has to be named here or it is simply not there. Only `sample/` is
-   * listed: it is the one tree that travels with the code, for a demo
-   * instance. A real deployment points ROOT_DIR at a directory on its own
-   * disk, which no bundler can or should try to include.
+   * tree has to be named here or it is simply not there. It applies to the
+   * standalone build on the box for the same reason. Only `sample/` is listed:
+   * it is the one tree that travels with the code, for a demo instance. A real
+   * deployment points ROOT_DIR at a directory on its own disk, which no bundler
+   * can or should try to include.
    */
   outputFileTracingIncludes: {
     '/**': ['./sample/**'],
