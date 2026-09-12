@@ -43,6 +43,17 @@ const base = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  /**
+   * The served tree is read at runtime, so on a platform that ships only the
+   * files it can trace from imports (Vercel and anything else serverless) the
+   * tree has to be named here or it is simply not there. Only `sample/` is
+   * listed: it is the one tree that travels with the code, for a demo
+   * instance. A real deployment points ROOT_DIR at a directory on its own
+   * disk, which no bundler can or should try to include.
+   */
+  outputFileTracingIncludes: {
+    '/**': ['./sample/**'],
+  },
   // Server Actions check Origin against Host themselves. Behind Caddy the
   // forwarded Host is what the browser actually asked for, and PUBLIC_ORIGIN
   // is the one value that does not depend on a header a proxy controls, so it

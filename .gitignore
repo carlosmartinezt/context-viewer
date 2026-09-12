@@ -8,3 +8,7 @@ public/custom.css
 *.tsbuildinfo
 __pycache__/
 *.pyc
+.vercel
+# Every env file except the documented template, which is part of the repo.
+.env*
+!.env.example
