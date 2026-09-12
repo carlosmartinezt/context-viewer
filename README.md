@@ -13,9 +13,8 @@ whatever repo they belong to, and this is only a way to look at them.
 
 ## Demo
 
-A demo instance runs from this repo pointed at `sample/` instead of a real
-directory, using `ops/context-viewer-demo.service` on port 3065. Log in with
-`carlos` / `demo`.
+A read-only demo runs on Vercel at https://context-viewer-demo.vercel.app,
+pointed at `sample/` instead of a real directory. Log in with `carlos` / `demo`.
 
 ```bash
 npm ci
