@@ -1,6 +1,6 @@
 import crypto from 'node:crypto'
 import { hashPassword, verifyPassword } from './auth'
-import { persist } from './settings'
+import { persist, refuseIfReadonly } from './settings'
 import type { Config } from './types'
 import type { Persisted } from './settings'
 
@@ -29,7 +29,15 @@ export function ensureSessionSecret(config: Config): void {
   if (config.sessionSecret) return
   const generated = crypto.randomBytes(32).toString('base64url')
   config.sessionSecret = generated
-  persist(config, { sessionSecret: generated })
+  // A secret that cannot be written is still a working secret for the life of
+  // this process; it just does not survive a restart. That is the right
+  // trade for an instance on a read-only or ephemeral filesystem, where
+  // throwing here would mean the app never boots at all.
+  try {
+    persist(config, { sessionSecret: generated })
+  } catch (err) {
+    console.error('[account] could not persist the session secret', err)
+  }
 }
 
 /**
@@ -41,6 +49,7 @@ export function ensureSessionSecret(config: Config): void {
  * caller's error handling is the only place "already set up" is decided.
  */
 export function createAccount(config: Config, username: string, password: string): void {
+  refuseIfReadonly(config)
   if (hasAccount(config)) throw new Error('An account already exists.')
   const u = String(username || '').trim()
   if (!u) throw new Error('Choose a username.')
@@ -66,6 +75,7 @@ export function updateAccount(
     newPassword?: string
   },
 ): string[] {
+  refuseIfReadonly(config)
   if (!verifyPassword(String(currentPassword || ''), config.passwordHash)) {
     throw new Error('Current password is wrong.')
   }

@@ -908,6 +908,32 @@ a { color: var(--accent); }
   gap: 0.85rem;
   align-items: flex-start;
 }
+/* A read-only instance wraps each form's controls in a disabled fieldset, so
+   the fieldset has to become the flex container the form was: a fieldset's
+   own border, padding and margin are browser defaults nobody wants here. */
+:is(.cv-card, .cv-settings) fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  align-items: flex-start;
+  width: 100%;
+  border: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+:is(.cv-card, .cv-settings) fieldset:disabled { opacity: 0.55; }
+:is(.cv-card, .cv-settings) fieldset:disabled button { cursor: not-allowed; }
+
+/* Says why the forms below are dead, in the same register as a hint rather
+   than as an error: nothing has gone wrong, this instance is just read-only. */
+.cv-readonly {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--r1);
+  background: var(--paper);
+}
+
 :is(.cv-card, .cv-settings) label {
   display: flex;
   flex-direction: column;

@@ -14,6 +14,7 @@ export const metadata: Metadata = { title: 'Settings' }
 export default function SettingsPage() {
   return (
     <SettingsForms
+      readonly={config.readonly}
       username={config.username}
       root={config.root}
       model={config.model}

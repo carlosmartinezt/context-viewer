@@ -15,6 +15,23 @@ import type { Config } from './types'
  * keeps working exactly as before for someone who never opens the page.
  */
 
+/**
+ * The one gate on every settings write.
+ *
+ * Deliberately at the top of each mutator rather than inside persist(): every
+ * mutator below assigns into `config` first and persists second, so a guard on
+ * persist() alone would refuse the file write but leave the running process
+ * reconfigured. On a read-only instance that is the whole attack: repoint
+ * `root` in memory and the served tree changes without anything being written.
+ *
+ * ensureSessionSecret() is the one persist() caller that is not a settings
+ * change and is not gated here: it runs at boot, before anyone can ask for
+ * anything.
+ */
+export function refuseIfReadonly(config: Config): void {
+  if (config.readonly) throw new Error('This instance is read-only.')
+}
+
 function settingsPath(config: Config): string {
   return path.join(config.dataDir, 'settings.json')
 }
@@ -108,6 +125,7 @@ function expandHome(p: string): string {
  * is confirmed to exist, so a typo cannot leave the app pointed at nothing.
  */
 export async function setRoot(config: Config, rawPath: string): Promise<void> {
+  refuseIfReadonly(config)
   const expanded = expandHome(String(rawPath || '').trim())
   if (!path.isAbsolute(expanded)) {
     throw new Error('Use an absolute path, or one starting with ~ (e.g. ~/notes).')
@@ -128,11 +146,13 @@ export async function setRoot(config: Config, rawPath: string): Promise<void> {
  *  ignored, so "save with the field blank" is a deliberate way to turn it
  *  off, not a no-op that silently keeps the old key. */
 export function setAnthropicKey(config: Config, key: string): void {
+  refuseIfReadonly(config)
   config.anthropicKey = String(key || '').trim()
   persist(config, { anthropicKey: config.anthropicKey })
 }
 
 export function setModel(config: Config, model: string): void {
+  refuseIfReadonly(config)
   const trimmed = String(model || '').trim()
   if (!trimmed) return
   config.model = trimmed
@@ -164,6 +184,7 @@ export interface AlertPatch {
  *  the stored one alone", so the settings form does not have to re-send a
  *  secret it never displays. */
 export function setAlerts(config: Config, patch: AlertPatch): string[] {
+  refuseIfReadonly(config)
   const fields: Persisted = {}
   const text = ['smtpHost', 'smtpUser', 'smtpFrom', 'smtpTo', 'smtpEhlo'] as const
   for (const key of text) {
