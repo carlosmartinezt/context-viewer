@@ -1,0 +1,3 @@
+DONE Migrate the blog off the old host
+DONE Set up nightly backups
+TODO Actually test restoring from a backup

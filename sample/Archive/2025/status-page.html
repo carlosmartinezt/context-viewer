@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>2025 Status</title>
+<style>
+  .year-bars {
+    display: flex;
+    align-items: stretch;
+    gap: 0.75rem;
+    height: 8rem;
+    margin: 1rem 0 0.5rem;
+  }
+  .year-bars .bar {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .year-bars .bar .fill {
+    width: 100%;
+    min-height: 2px;
+    border-radius: var(--r1, 4px) var(--r1, 4px) 0 0;
+    background: color-mix(in srgb, var(--ctx-accent) 70%, var(--paper, #fdfcfa));
+  }
+  .year-bars .bar .label {
+    font-size: 0.72rem;
+    color: var(--muted, #6f6960);
+  }
+</style>
+</head>
+<body>
+<header class="ctx-header">
+  <p class="ctx-eyebrow">Archive · 2025</p>
+  <h1>2025 Year in Review</h1>
+  <dl class="ctx-meta">
+    <div><dt>Side projects shipped</dt><dd>3</dd></div>
+    <div><dt>Retired</dt><dd>1</dd></div>
+    <div><dt>Status</dt><dd>Closed out</dd></div>
+  </dl>
+</header>
+
+<p>An archived snapshot page, kept as an example of an HTML note rendering
+with its own layout and the viewer's built-in components.</p>
+
+<div class="ctx-grid">
+  <section class="ctx-card">
+    <div class="ctx-card-head">
+      <div><h3>Shipped</h3><p class="ctx-sub">Went out the door this year</p></div>
+      <span class="ctx-tag ctx-tag-done">Done</span>
+    </div>
+    <div class="ctx-chips">
+      <span class="ctx-chip ctx-chip-done">Video Lyrics</span>
+      <span class="ctx-chip ctx-chip-done">NJ Transit</span>
+      <span class="ctx-chip ctx-chip-done">Journal</span>
+    </div>
+  </section>
+
+  <section class="ctx-card">
+    <div class="ctx-card-head">
+      <div><h3>Retired</h3><p class="ctx-sub">Wound down on purpose</p></div>
+      <span class="ctx-tag ctx-tag-idle">Idle</span>
+    </div>
+    <p class="ctx-note">One project retired rather than maintained past the
+    point it was worth it.</p>
+  </section>
+</div>
+
+<h2>Shipped by quarter</h2>
+<div class="year-bars">
+  <div class="bar"><div class="fill" style="height: 20%"></div><span class="label">Q1</span></div>
+  <div class="bar"><div class="fill" style="height: 55%"></div><span class="label">Q2</span></div>
+  <div class="bar"><div class="fill" style="height: 35%"></div><span class="label">Q3</span></div>
+  <div class="bar"><div class="fill" style="height: 90%"></div><span class="label">Q4</span></div>
+</div>
+
+<p class="ctx-callout ctx-callout-good">Closing out 2025 with more shipped
+than retired. Keep that ratio in 2026.</p>
+</body>
+</html>

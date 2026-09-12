@@ -1,0 +1,5 @@
+Meeting notes, 2026-06-02
+
+- Agreed on Caddy for TLS, no CDN for now
+- Follow up on font licensing before picking a typeface
+- Revisit in two weeks
