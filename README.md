@@ -11,6 +11,12 @@ Point it at a directory and it works. Nothing about the code knows what is in
 the tree, which is the whole idea: the files stay wherever they live, in
 whatever repo they belong to, and this is only a way to look at them.
 
+## Demo
+
+A demo instance runs from this repo pointed at `sample/` instead of a real
+directory, using `ops/context-viewer-demo.service` on port 3065. Log in with
+`carlos` / `demo`.
+
 ```bash
 npm ci
 npm run build
