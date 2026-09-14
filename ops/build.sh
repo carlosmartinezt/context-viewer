@@ -10,7 +10,10 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT="$PWD"
 
-. "$HOME/agents/cc/ops/deploy-lib.sh"
+# Where deployments live. An already-exported PUBLIC_ROOT wins, so a one-off
+# deploy can be redirected without editing anything.
+[[ -f "$HOME/.config/deploy.env" ]] && . "$HOME/.config/deploy.env"
+: "${PUBLIC_ROOT:=$HOME/public}"
 STAGE="$PUBLIC_ROOT/context-viewer.new"
 
 echo "==> installing"

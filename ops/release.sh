@@ -6,7 +6,41 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-. "$HOME/agents/cc/ops/deploy-lib.sh"
+# Where deployments live. An already-exported PUBLIC_ROOT wins, so a one-off
+# deploy can be redirected without editing anything.
+[[ -f "$HOME/.config/deploy.env" ]] && . "$HOME/.config/deploy.env"
+: "${PUBLIC_ROOT:=$HOME/public}"
+
+# systemd takes WorkingDirectory= literally, so it cannot read PUBLIC_ROOT and
+# the two can drift. Drift is silent and nasty: the build lands in one place and
+# the service keeps running the old one, so a deploy appears to succeed and
+# changes nothing. Check before swapping.
+#
+#   assert_unit_workdir <unit> <expected-dir> [--user]
+assert_unit_workdir() {
+  local unit="$1" expected="$2" scope="${3:-}"
+  local actual
+  actual=$(systemctl $scope show -p WorkingDirectory --value "$unit" 2>/dev/null)
+  # systemd reports the bare path, or "-/path" when the unit marked it optional.
+  actual="${actual#-}"
+  if [[ -z "$actual" ]]; then
+    echo "Could not read WorkingDirectory from $unit. Is it installed?" >&2
+    return 1
+  fi
+  if [[ "$actual" != "$expected" ]]; then
+    cat >&2 <<MSG
+Deploy root drift.
+
+  $unit runs from     : $actual
+  this deploy targets : $expected
+
+systemd cannot read PUBLIC_ROOT, so the unit's WorkingDirectory= has to be
+edited to match by hand. Releasing now would build into a directory nothing
+serves, and the site would silently keep running the old build.
+MSG
+    return 1
+  fi
+}
 LIVE="$PUBLIC_ROOT/context-viewer"
 
 [[ $EUID -ne 0 ]] || { echo "Run this as carlos, not with sudo." >&2; exit 1; }
