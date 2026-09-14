@@ -1,0 +1,26 @@
+/*
+  context-viewer — the one web font.
+
+  JetBrains Mono, and nothing else. This used to be an @import at the top of
+  viewer.css asking for three families, of which two (Fraunces and Hanken
+  Grotesk, left over from the site this app grew out of) were named by tokens
+  nothing ever read. It was also blocked outright: the app's own CSP says
+  `style-src 'self'`, so the browser refused the stylesheet on every page and
+  fell back to the system stack, which is why nobody noticed the fonts had
+  stopped working.
+
+  Fixing that means naming the two hosts in the policy, and a named host is a
+  cost, so this file exists to keep that cost where it is earned:
+
+  It is linked from the workbench and from the document frame, and from
+  nowhere else. Sign in and first-run setup keep a fully strict policy and
+  make no third-party request at all, which is the right trade on the one
+  page a stranger can reach: they are set in the system UI face and have no
+  code on them to set in anything else.
+
+  --mono still carries its full fallback stack, so an instance with no route
+  to the internet, or one that deletes this link, renders code in the
+  system monospace and looks no worse than it did while this was broken.
+*/
+
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap");

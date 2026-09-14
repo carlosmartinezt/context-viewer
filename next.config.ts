@@ -24,7 +24,14 @@ const WORKBENCH_BODY =
   // cdnjs.cloudflare.com: where notes load libraries such as Chart.js from.
   // Add a host only when a note actually needs it.
   `script-src 'self' 'unsafe-inline'${dev ? " 'unsafe-eval'" : ''} https://cdnjs.cloudflare.com; ` +
-  "style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; " +
+  // fonts.googleapis.com serves the stylesheet fonts.css imports, and
+  // fonts.gstatic.com the woff2 files that stylesheet then points at: two
+  // hosts, two directives, and they are not interchangeable. Without the
+  // font-src the file would be refused at the second step, since there is no
+  // font-src here to fall back to but default-src 'self'.
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+  "font-src 'self' https://fonts.gstatic.com; " +
+  "img-src 'self' data:; object-src 'none'; " +
   "base-uri 'none'; form-action 'self';"
 
 const WORKBENCH = `${WORKBENCH_BODY} frame-ancestors 'none'`

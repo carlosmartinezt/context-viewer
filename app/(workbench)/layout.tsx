@@ -17,8 +17,16 @@ export default async function WorkbenchLayout({ children }: { children: ReactNod
   const tree = await files.tree()
 
   return (
-    <Workbench tree={tree} root={rootName()}>
-      {children}
-    </Workbench>
+    <>
+      {/* The web font, linked here and not in the root layout, because the
+          root layout is also sign in and setup: those keep a strict policy
+          that names no third-party host, and they have no code on them to
+          set in a monospace anyway. React hoists a stylesheet with a
+          precedence into the head. */}
+      <link rel="stylesheet" href="/_ctx/assets/fonts.css" precedence="default" />
+      <Workbench tree={tree} root={rootName()}>
+        {children}
+      </Workbench>
+    </>
   )
 }

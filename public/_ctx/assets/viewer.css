@@ -1,5 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600&family=Hanken+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
-
 /*
   context-viewer — the whole stylesheet.
 
@@ -22,8 +20,11 @@
 */
 
 :root {
-  --serif: "Fraunces", Georgia, serif;
-  --sans: "Hanken Grotesk", system-ui, sans-serif;
+  /* The one web font, and the only token here that anything reads. It is
+     fetched by fonts.css, which the workbench and the document frame link and
+     the sign-in page deliberately does not: the fallback stack is what a page
+     without that link gets, and code still looks like code. --serif and
+     --sans went with the two families nobody used. */
   --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
 }
 

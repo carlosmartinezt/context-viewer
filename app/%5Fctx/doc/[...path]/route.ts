@@ -53,8 +53,11 @@ const NOTE_HEAD = `<link rel="stylesheet" href="/_ctx/assets/components.css">
 <script src="/_ctx/assets/doc-frame.js"></script>`
 
 /** Our own shells (markdown, source, plain text) have no styles of their own,
-    so they take viewer.css as well: it is what renders them. */
+    so they take viewer.css as well: it is what renders them, and fonts.css,
+    because source view is the one place --mono really shows. A note gets
+    neither: it is a finished page and brings its own type. */
 const HEAD = `<link rel="stylesheet" href="/_ctx/assets/themes.css">
+<link rel="stylesheet" href="/_ctx/assets/fonts.css">
 <link rel="stylesheet" href="/_ctx/assets/viewer.css">
 <link rel="stylesheet" href="/_ctx/assets/components.css">
 <script src="/_ctx/assets/theme.js"></script>

@@ -40,8 +40,8 @@ src/server/             the parts that may only run on the server
 src/components/         the client: Workbench, Tree, Minimap, AgentPanel,
                         SourceControl, Listing, DocFrame, useTabs, themes
 public/_ctx/assets/         viewer.css, themes.css, components.css,
-                        doc-style.css, theme.js, doc-frame.js, and custom.css
-                        if you add one
+                        doc-style.css, fonts.css, theme.js, doc-frame.js, and
+                        custom.css if you add one
 _data/                  audit log, trash, settings.json. Git-ignored
 ```
 
@@ -468,10 +468,37 @@ guides are always drawn rather than on hover.
 Every other route is strict (`script-src 'self'`, no inline, no exceptions).
 The doc route relaxes to `'unsafe-inline'` because notes carry their own
 `<style>`/`<script>` (a note may chart against Chart.js, say), plus one
-explicit host (`cdnjs.cloudflare.com`) that notes load libraries from. Before adding a host to the workbench policy in `next.config.ts`, check what a note
+explicit host (`cdnjs.cloudflare.com`) that notes load libraries from. Before
+adding a host to the workbench policy in `next.config.ts`, check what a note
 really needs (`grep -rohE '<script[^>]+src="https?://[^"]*"'`) rather than
 reaching for a broad `https:` wildcard, which defeats the point of having a CSP
 at all. This check needs redoing whenever `ROOT_DIR` points somewhere new.
+
+**The font hosts are the other two names on that list, and they are two on
+purpose.** `fonts.googleapis.com` in `style-src` serves the stylesheet
+`fonts.css` imports; `fonts.gstatic.com` in `font-src` serves the woff2 files
+that stylesheet then points at. Allowing only the first fails at the second
+step, silently, because there is no other `font-src` here to fall back to but
+`default-src 'self'`.
+
+**Sign in and setup are not on that list, and the font is linked so that they
+need not be.** `viewer.css` used to `@import` three families from Google at
+its first line, on every page including the login page, which meant the app's
+most exposed page made a third-party request before anyone had authenticated.
+It was also entirely dead: `style-src 'self'` refused the stylesheet on every
+route, so the fonts had never once loaded, and the workbench had been running
+on the system stack since the CSP was added. Two of the three families
+(Fraunces, Hanken Grotesk, from the site this grew out of) were named by
+`--serif` and `--sans`, which nothing read; only `--mono` is used.
+
+So the import moved to `public/_ctx/assets/fonts.css`, which asks for
+JetBrains Mono alone and is linked from two places: the workbench layout (React
+hoists a `<link>` carrying a `precedence` into the head) and the `HEAD` of the
+document route, where source view is. The `(bare)` pages inherit neither, so
+they keep a policy that names no third-party host at all. `--mono` still
+carries its full fallback stack, so an instance with no route to the internet
+renders code in the system monospace and looks no worse than this did while it
+was broken.
 
 **`config` is a shared, mutable object, not a snapshot.** `src/lib/settings.ts`
 mutates `config.root`/`config.anthropicKey`/`config.model`/`config.username`/
