@@ -43,6 +43,11 @@ const base = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // `next dev` otherwise appends a block of its own to CLAUDE.md and re-adds
+  // it every time it starts. That file is written by hand and says what is
+  // load-bearing about this app; it is not a place for the framework to leave
+  // notes in.
+  agentRules: false,
   // Standalone emits .next/standalone/server.js with only the node_modules the
   // app actually reaches, so what gets served can live in ~/public with no
   // source tree and no npm install beside it. See ops/build.sh.

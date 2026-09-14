@@ -1,0 +1,71 @@
+/*
+  context-viewer — the optional document style.
+
+  A note that brought its own HTML is served almost nothing: components.css,
+  this file and doc-frame.js. That is on purpose, and the default here is to
+  do nothing at all. A note is somebody else's finished page, it renders in
+  its frame exactly as it renders in a browser, and deciding its typography
+  for it is not this app's business.
+
+  The exception this file exists for: plenty of HTML files were never written
+  to be read as a page. They have no stylesheet of their own, so the browser
+  gives them Times at whatever width the pane happens to be, which is the one
+  case where "do nothing" reads worse than anything else would. So there is a
+  switch, off by default, in the gear menu under Document style. Turn it on
+  and a bare HTML file gets a reading width, a familiar face and headings
+  that are sized rather than merely bold.
+
+  Two rules keep it from becoming a theme:
+
+  Everything is wrapped in :where(:root[data-doc-style="basic"]), so no rule
+  here weighs more than the bare tag it names. A note's own stylesheet sits
+  later in the same head and wins on order, which is the right precedence in
+  somebody else's document: this sets defaults, it does not override.
+
+  Every value is literal. A note is served no themes.css (the color-scheme it
+  carries would flip the note's own ink white underneath cards it painted
+  light), so there are no tokens to read here and no theme to follow. This is
+  the look of a plain page in a browser, tidied up, and it is the same in all
+  eleven workbench themes.
+*/
+
+:where(:root[data-doc-style="basic"]) {
+  body {
+    max-width: 46rem;
+    margin: 0 auto;
+    padding: 1.75rem 1.25rem 4rem;
+    background: #ffffff;
+    color: #1f1d1a;
+    font: 1rem / 1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+    letter-spacing: -0.011em;
+  }
+
+  :is(h1, h2, h3, h4, h5, h6) {
+    margin: 1.6rem 0 0.65rem;
+    line-height: 1.25;
+    font-weight: 600;
+  }
+  :is(h1, h2, h3, h4, h5, h6):first-child { margin-top: 0; }
+  h1 { font-size: 1.6rem; }
+  h2 { font-size: 1.32rem; }
+  h3 { font-size: 1.09rem; }
+  :is(h4, h5, h6) { font-size: 1rem; }
+
+  :is(p, ul, ol, dl) { margin: 0 0 1rem; }
+  li { margin-bottom: 0.1rem; }
+  a { color: #0b57d0; font-weight: 500; }
+  hr { border: none; border-top: 1px solid #e3e0da; margin: 1.6rem 0; }
+  img { max-width: 100%; height: auto; }
+
+  /* The same restraint the rest of the app keeps: a quote is indented, not
+     boxed, and a code block is an indented rule rather than a card. */
+  blockquote { margin: 1rem 0; padding-left: 1rem; color: #6f6960; }
+  :is(code, pre) { font-family: ui-monospace, Menlo, "Cascadia Mono", monospace; font-size: 0.85em; }
+  code { background: #f3f1ec; padding: 0.05em 0.3em; }
+  pre { padding: 0.2rem 0 0.2rem 1rem; border-left: 2px solid #e3e0da; overflow-x: auto; }
+  pre code { background: none; padding: 0; }
+
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.95em; }
+  :is(th, td) { text-align: left; padding: 0.35rem 1.2rem 0.35rem 0; vertical-align: top; }
+  thead th { border-bottom: 1px solid #e3e0da; font-weight: 600; }
+}

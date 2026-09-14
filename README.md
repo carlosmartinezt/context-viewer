@@ -66,9 +66,16 @@ the same way.
 - **View source.** `?mode=source` shows any file as text with line numbers
   (drawn in CSS, so copying the code does not pick them up). Code files are
   source by default. One file can be open twice, rendered and as source.
-- **Themes.** Fifteen workbench colour themes: Paper, this app's own warm
-  light theme and the default, plus ports of fourteen of VS Code's. The choice
-  is remembered per browser and applied before paint.
+- **Themes.** Eleven workbench colour themes: Chrome, the default, plus ports
+  of ten of VS Code's. The choice is remembered per browser and applied before
+  paint.
+- **Document style, off by default.** A note that styles itself is left alone,
+  which is the point of the frame. But an HTML file with no stylesheet of its
+  own gets the browser's default, which is Times at the full width of the
+  pane. Turn on **Document style** in the gear menu and those get a reading
+  width, a system face and sized headings instead. It never touches a file
+  that has styles of its own, and it never touches the app's own rendering of
+  markdown or source.
 - **Components for notes.** `components.css` ships a small set of opt-in
   classes (`ctx-card`, `ctx-tag`, `ctx-callout` and a few more) that follow
   the theme. The reference is the app's own `/_ctx/components` page.

@@ -21,16 +21,18 @@ import { errorMessage } from '@/lib/errors'
  * around it. scopeStyles() and extractBody() existed only to fake that
  * boundary, and both are gone.
  *
- * What is still added to an HTML note: the theme tokens, the optional ctx-
- * components and the two scripts. Never viewer.css, which styles body, bare
- * headings, paragraphs, links and code: right for the documents this app
- * renders itself, wrong for somebody else's finished page. A note is
- * self-sufficient, and the only thing it opts into is a class named ctx-.
+ * What is still added to an HTML note: the optional ctx- components, the
+ * optional document style and the frame script. Never viewer.css, which
+ * styles body, bare headings, paragraphs, links and code: right for the
+ * documents this app renders itself, wrong for somebody else's finished
+ * page. A note is self-sufficient, and the only thing it opts into is a class
+ * named ctx-.
  */
 
 /**
  * What a note that brought its own HTML gets, and all it gets: the optional
- * ctx- components, and the script that lets a link in it open a tab.
+ * ctx- components, the optional document style, and the script that lets a
+ * link in it open a tab.
  *
  * No themes.css and no theme.js either. A theme is the workbench's colours,
  * and a note that ships its own palette does not want them: themes.css states
@@ -38,8 +40,16 @@ import { errorMessage } from '@/lib/errors'
  * ink to white and its canvas to black underneath cards it painted light.
  * components.css carries the default theme's values as fallbacks, so a ctx-
  * component still looks right here with nothing under it.
+ *
+ * doc-style.css is the one thing here that is a choice, and it is off. Every
+ * rule in it sits under :root[data-doc-style="basic"], which doc-frame.js sets
+ * from the browser's own saved preference before the body is parsed, so the
+ * file is inert unless someone has asked for it in the gear menu. It is
+ * linked before the note's own head, and its rules are wrapped in :where(),
+ * so a note that styles itself still wins twice over: on order and on weight.
  */
 const NOTE_HEAD = `<link rel="stylesheet" href="/_ctx/assets/components.css">
+<link rel="stylesheet" href="/_ctx/assets/doc-style.css">
 <script src="/_ctx/assets/doc-frame.js"></script>`
 
 /** Our own shells (markdown, source, plain text) have no styles of their own,

@@ -39,8 +39,9 @@ src/server/             the parts that may only run on the server
   actions/              server actions: sign in, setup, settings
 src/components/         the client: Workbench, Tree, Minimap, AgentPanel,
                         SourceControl, Listing, DocFrame, useTabs, themes
-public/_ctx/assets/         viewer.css, themes.css, components.css, theme.js,
-                        doc-frame.js, and custom.css if you add one
+public/_ctx/assets/         viewer.css, themes.css, components.css,
+                        doc-style.css, theme.js, doc-frame.js, and custom.css
+                        if you add one
 _data/                  audit log, trash, settings.json. Git-ignored
 ```
 
@@ -165,8 +166,9 @@ note does is now none of our business.
 
 **`/_ctx/doc` adds to a note's head, it never rewrites its content.** For the
 shells this app builds itself (markdown, source, plain text) that is three
-stylesheets and the two scripts. **An HTML note gets `components.css` and
-`doc-frame.js`, and nothing else.** A file that is already a complete HTML
+stylesheets and the two scripts. **An HTML note gets `components.css`,
+`doc-style.css` (inert unless the reader has turned it on) and `doc-frame.js`,
+and nothing else.** A file that is already a complete HTML
 document is self-sufficient: it renders here exactly as it renders when you
 open it in a browser, and the one thing it opts into is a class named `ctx-`,
 which is optional too. Two heads in the route, `NOTE_HEAD` and `HEAD`; do not
@@ -242,6 +244,38 @@ var(--text)`), so choosing a dark chrome darkens the page under the text with
 it, inside the frame as well as outside. Verified by switching to Dark+ with a
 document open and watching `--doc-paper` go from `#fdfcfa` to `#1e1e1e` in the
 iframe's own root.
+
+**`data-doc-style` is the one exception, and it is the opposite of what was
+removed.** Added 14 Sep 2026. `data-doc-theme` was twelve ways to set the
+pages this app renders itself, which is a choice nobody wanted to make. This is
+one switch, default off, and it can only reach a file this app did not write.
+
+The case for it: a note that brought its own HTML is served no stylesheet of
+ours, which is right for a finished page and wrong for the many HTML files that
+were never written to be read as a page at all. Those get the browser's own
+default, which is Times at whatever width the pane happens to be. `Basic` gives
+them a reading width, a system face and sized headings. Nothing else, and no
+second option is coming: if this ever grows a list of named looks, it has
+become `data-doc-theme` again.
+
+Three things keep it honest, and all three are load-bearing:
+
+- **It is linked only from `NOTE_HEAD`.** The documents this app renders
+  (markdown, plain text, source) have `viewer.css` and must never see this
+  file, or there would be two answers to how a paragraph is set.
+- **Every rule is inside `:where(:root[data-doc-style="basic"])`**, so no rule
+  here weighs more than the bare tag it names, and it is linked *before* the
+  note's own head. A note that styles itself wins twice over, on weight and on
+  order. Checked against `status-page.html`, which is unchanged with the
+  switch on.
+- **Every value in it is literal.** A note is served no `themes.css` (its
+  `color-scheme: dark` is what flipped a note's ink white underneath cards it
+  had painted light), so there are no tokens to read and no theme to follow.
+  This looks the same in all eleven workbench themes, on purpose.
+
+`doc-frame.js` sets the attribute from `cvDocStyle` in the head, before the
+body is parsed, so nothing flashes; `applyDocStyle()` also writes it straight
+into an open frame, for a change made while a document is already up.
 
 **The UI is VS Code's, on purpose.** Activity bar, sidebar (explorer and
 source control), tabs, breadcrumbs, minimap, a bottom panel for the agent, a

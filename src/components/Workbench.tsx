@@ -11,7 +11,7 @@ import { AgentPanel } from './AgentPanel'
 import { useDialog } from './Dialog'
 import { SourceControl } from './SourceControl'
 import { useTabs, tabTitle } from './useTabs'
-import { UI_THEMES, applyTheme, currentTheme } from './themes'
+import { UI_THEMES, DOC_STYLES, applyTheme, currentTheme, applyDocStyle, currentDocStyle } from './themes'
 import { ACTIVITY_ICONS, EntryIcon } from './icons'
 
 /**
@@ -57,7 +57,7 @@ export function Workbench({
   const [drawer, setDrawer] = useState(false)
   const [panelHidden, setPanelHidden] = useState(true)
   const [minimapHidden, setMinimapHidden] = useState(false)
-  const [menu, setMenu] = useState<'none' | 'root' | 'ui'>('none')
+  const [menu, setMenu] = useState<'none' | 'root' | 'ui' | 'doc'>('none')
   const [rowMenu, setRowMenu] = useState<{ target: Target; x: number; y: number } | null>(null)
   const [tabMenu, setTabMenu] = useState<{ path: string; x: number; y: number } | null>(null)
   const [changes, setChanges] = useState(0)
@@ -66,11 +66,16 @@ export function Workbench({
   // The chosen theme, for the menu's tick. Read on mount, not during render:
   // the server always renders the default, and hydration keeps what it sent.
   const [theme, setTheme] = useState('')
+  // The document style, read the same way and for the same reason: it lives in
+  // localStorage, which the server cannot see.
+  const [docStyle, setDocStyle] = useState(DOC_STYLES[0][0])
   // A saved theme that no longer exists falls back to the default.
   useEffect(() => {
     const saved = currentTheme()
     if (!UI_THEMES.some(([name]) => name === saved)) applyTheme(UI_THEMES[0][0])
     setTheme(currentTheme())
+    const doc = currentDocStyle()
+    setDocStyle(DOC_STYLES.some(([name]) => name === doc) ? doc : DOC_STYLES[0][0])
   }, [])
   // The path a delete or a rename is moving us off. The tree is refreshed on
   // the other side of that navigation, never in the same tick as it.
@@ -324,6 +329,24 @@ export function Workbench({
                 key={name}
                 aria-selected={theme === name}
                 onClick={() => { applyTheme(name); setTheme(name); setMenu('none'); setRevision((r) => r + 1) }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+        {/* Not a second theme axis: a note styles itself, and this is the one
+            switch for the ones that never did. See DOC_STYLES. */}
+        <div className="ctx-submenu">
+          <button data-menu-item onClick={() => setMenu(menu === 'doc' ? 'root' : 'doc')}>
+            Document style<span>›</span>
+          </button>
+          <div className="ctx-menu ctx-themes" hidden={menu !== 'doc'}>
+            {DOC_STYLES.map(([name, label]) => (
+              <button
+                key={name}
+                aria-selected={docStyle === name}
+                onClick={() => { applyDocStyle(name); setDocStyle(name); setMenu('none'); setRevision((r) => r + 1) }}
               >
                 {label}
               </button>

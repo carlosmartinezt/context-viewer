@@ -1,0 +1,8 @@
+Things that landed here and have not been filed yet.
+
+- Ask about the font licence before the redesign picks a typeface
+- Someone recommended The Timeless Way of Building, add it to the reading list
+- Check whether the nightly backup has ever actually been restored
+
+The inbox is meant to be emptied, not read. Anything still here after a
+week belongs in a project, an area or the bin.

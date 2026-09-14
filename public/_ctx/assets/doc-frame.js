@@ -18,6 +18,18 @@
    */
   document.documentElement.setAttribute('data-ctx-frame', '')
 
+  /*
+   * The document style, off unless someone turned it on. doc-style.css is
+   * linked into every note and every rule in it hangs off this attribute, so
+   * the switch is one attribute rather than a different page: same shape as
+   * the workbench theme, and set here for the same reason, before the body is
+   * parsed, so nothing flashes unstyled and then styled.
+   */
+  try {
+    var doc = localStorage.getItem('cvDocStyle')
+    if (doc && doc !== 'none') document.documentElement.setAttribute('data-doc-style', doc)
+  } catch (e) {}
+
   var parentWindow = window.parent
   if (parentWindow === window) return // Opened directly, not framed. Do nothing.
 

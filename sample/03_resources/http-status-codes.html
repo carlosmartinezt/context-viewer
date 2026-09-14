@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>HTTP status codes worth remembering</title>
+</head>
+<body>
+<h1>HTTP status codes worth remembering</h1>
+
+<p>An HTML file with no styles of its own, saved out of a browser and kept
+because it was useful. It is the shape most HTML files in a notes directory
+are: content, no design.</p>
+
+<p>The viewer shows it as a browser would, which for a file like this means
+Times at whatever width the pane happens to be. Turn on <strong>Document
+style</strong> in the gear menu to give it a reading width and a familiar
+face instead. Turn it off and it goes back to being exactly the file.</p>
+
+<h2>The ones that come up</h2>
+<table>
+<thead><tr><th>Code</th><th>Name</th><th>When</th></tr></thead>
+<tbody>
+<tr><td>204</td><td>No Content</td><td>It worked and there is nothing to send back</td></tr>
+<tr><td>304</td><td>Not Modified</td><td>The cached copy is still good</td></tr>
+<tr><td>401</td><td>Unauthorized</td><td>Who are you? Log in</td></tr>
+<tr><td>403</td><td>Forbidden</td><td>I know who you are, and no</td></tr>
+<tr><td>409</td><td>Conflict</td><td>Someone else changed it first</td></tr>
+<tr><td>422</td><td>Unprocessable Content</td><td>Well-formed, still wrong</td></tr>
+<tr><td>429</td><td>Too Many Requests</td><td>Slow down</td></tr>
+<tr><td>502</td><td>Bad Gateway</td><td>The thing behind the proxy is unhappy</td></tr>
+</tbody>
+</table>
+
+<h2>The two that get confused</h2>
+<p>401 is about identity and 403 is about permission. If logging in could fix
+it, it is a 401. If logging in changes nothing, it is a 403.</p>
+
+<blockquote>A 404 on something that exists is sometimes deliberate: it is how
+you refuse without admitting the thing is there.</blockquote>
+
+<h2>Redirects</h2>
+<ul>
+  <li><code>301</code> and <code>308</code> are permanent, and browsers cache them hard. Be sure.</li>
+  <li><code>302</code> and <code>307</code> are temporary.</li>
+  <li>The 307/308 pair is the one that keeps the method and the body. 301 and
+  302 let a POST turn into a GET, which is rarely what anyone meant.</li>
+</ul>
+</body>
+</html>
