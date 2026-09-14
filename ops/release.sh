@@ -6,7 +6,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-. "$HOME/bin/deploy-lib.sh"
+. "$HOME/agents/cc/ops/deploy-lib.sh"
 LIVE="$PUBLIC_ROOT/context-viewer"
 
 [[ $EUID -ne 0 ]] || { echo "Run this as carlos, not with sudo." >&2; exit 1; }

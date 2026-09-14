@@ -10,7 +10,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT="$PWD"
 
-. "$HOME/bin/deploy-lib.sh"
+. "$HOME/agents/cc/ops/deploy-lib.sh"
 STAGE="$PUBLIC_ROOT/context-viewer.new"
 
 echo "==> installing"
