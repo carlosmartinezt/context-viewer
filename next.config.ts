@@ -51,7 +51,13 @@ const nextConfig: NextConfig = {
   // Standalone emits .next/standalone/server.js with only the node_modules the
   // app actually reaches, so what gets served can live in ~/public with no
   // source tree and no npm install beside it. See ops/build.sh.
-  output: 'standalone',
+  //
+  // Not on Vercel, which builds its own bundle from the same tree and has its
+  // own opinion about where the trace files go: asking for standalone there
+  // failed the build outright on `.next/next-server.js.nft.json`, in Vercel's
+  // own step after the build. The demo needs no standalone bundle anyway,
+  // because nobody copies its output anywhere.
+  output: process.env.VERCEL ? undefined : 'standalone',
   /**
    * The served tree is read at runtime, so on a platform that ships only the
    * files it can trace from imports (Vercel and anything else serverless) the
