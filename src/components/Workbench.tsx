@@ -83,6 +83,7 @@ export function Workbench({
   const benchRef = useRef<HTMLDivElement>(null)
   const paneRef = useRef<HTMLDivElement>(null)
   const activeTabRef = useRef<HTMLAnchorElement>(null)
+  const crumbsRef = useRef<HTMLSpanElement>(null)
   // isPending is the real thing, not a timer: the spin stops when the server
   // has actually sent a new tree, so a slow refresh looks slow instead of
   // looking finished and wrong.
@@ -107,6 +108,22 @@ export function Workbench({
   useEffect(() => {
     activeTabRef.current?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
   }, [currentPath, tabs.length])
+
+  // On a phone the breadcrumb is the page's header and overflows, so it is
+  // scrolled to its end: the file you are reading, not the root, is what shows.
+  useEffect(() => {
+    const el = crumbsRef.current
+    if (!el) return
+    el.scrollLeft = el.scrollWidth
+    el.toggleAttribute('data-clipped', el.scrollWidth > el.clientWidth)
+  }, [currentPath])
+
+  // The drawer opens on the file you are reading, not at the top of the tree.
+  useEffect(() => {
+    if (!drawer) return
+    const row = benchRef.current?.querySelector('.ctx-sidebar [aria-current]')
+    row?.scrollIntoView({ block: 'center' })
+  }, [drawer])
 
   /**
    * Registered from the workbench and nowhere else, so it exists only for
@@ -445,7 +462,17 @@ export function Workbench({
         </div>
 
         <div className="ctx-breadcrumbs">
-          <span data-crumbs>
+          {/* Only drawn on a narrow screen, where there is no activity bar:
+              the one way to the tree, where a thumb expects it. */}
+          <button
+            className="ctx-files"
+            aria-label="Files"
+            aria-expanded={drawer}
+            onClick={() => { setView('explorer'); setDrawer((d) => !d) }}
+          >
+            <svg viewBox="0 0 24 24">{ACTIVITY_ICONS.explorer}</svg>
+          </button>
+          <span data-crumbs ref={crumbsRef}>
             <a href="/" onClick={(e) => { e.preventDefault(); open('/') }}>{root}</a>
             {crumbs.map((part, i) => (
               <span key={i} style={{ display: 'contents' }}>

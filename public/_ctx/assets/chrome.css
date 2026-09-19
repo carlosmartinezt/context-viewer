@@ -122,10 +122,11 @@
   .ctx-dialog-actions button:not(.primary, .danger):hover { background: var(--hover); }
 
   @media (pointer: coarse) { --row: 40px; }
+  /* A phone reads edge to edge: no card, no desk around it. */
   @media (max-width: 800px) {
-    .ctx-editor, .ctx-panel { margin-right: 8px; }
-    .ctx-tabs { padding: 12px 12px 0; }
-    .ctx-breadcrumbs { padding: 0 12px; }
-    .ctx-doc:not(:has(iframe)) { padding: 0 12px 12px; }
+    .ctx-editor, .ctx-panel { margin: 0; border-radius: 0; }
+    .ctx-breadcrumbs { height: 52px; padding: 0 12px; font-size: 16px; box-shadow: 0 1px var(--chrome-line); }
+    .ctx-doc:not(:has(iframe)) { padding: 16px 12px 12px; }
+    .ctx-status { padding: 0 12px; }
   }
 }

@@ -1041,7 +1041,9 @@ a { color: var(--accent); }
    screen is (a phone, a split window) and whether the pointer is a finger (a
    phone, but also a tablet that is wide enough for the desktop layout). */
 
-.ctx-scrim { display: none; }
+.ctx-scrim, .ctx-files { display: none; }
+@keyframes ctx-drawer { from { transform: translateX(-24px); opacity: 0; } }
+@keyframes ctx-fade { from { opacity: 0; } }
 
 @media (max-width: 800px) {
   /* Still four columns. Dropping to three left every grid-area behind, since
@@ -1050,31 +1052,77 @@ a { color: var(--accent); }
      leaving the bar 48px wide with the open file's path squeezed to nothing.
      The sidebar floats over the workbench here, so its column and the drag
      handle beside it collapse to zero instead of disappearing. */
-  :root { --activity: 44px; }
-  .ctx-workbench { grid-template-columns: var(--activity) 0 0 1fr; }
+  /* The activity bar goes too, so the document has the whole width. Its
+     column stays, at zero, and the bar comes back inside the open drawer, so
+     source control and the gear are still one tap from the tree. Literal
+     zeros rather than var(--activity): a theme sets that on a more specific
+     selector than this one. */
+  .ctx-workbench { grid-template-columns: 0 0 0 1fr; }
+  .ctx-workbench:not(.drawer-open) .ctx-activity { display: none; }
+  .ctx-workbench.drawer-open .ctx-activity {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: var(--status);
+    z-index: 7;
+    width: var(--activity);
+  }
 
   /* The sidebar is a drawer: closed until asked for (drawer-open is set by
      Workbench, never by the server, so a phone does not open on a wall of
      tree), and closed again once a file is picked. sidebar-hidden is the
      desktop's toggle and means nothing here. */
   .ctx-sidebar {
-    position: absolute;
+    position: fixed;
     left: var(--activity);
     top: 0;
     bottom: var(--status);
     z-index: 6;
-    width: min(300px, calc(100vw - var(--activity) - 40px));
+    width: min(320px, calc(100vw - var(--activity) - 48px));
     box-shadow: 8px 0 28px -12px var(--shadow);
   }
   .ctx-workbench:not(.drawer-open) .ctx-sidebar { display: none; }
   .ctx-workbench.drawer-open .ctx-sidebar { display: flex; }
-  /* The activity bar stays uncovered, so its buttons still switch views. */
   .ctx-scrim {
     display: block;
     position: fixed;
-    inset: 0 0 0 var(--activity);
+    inset: 0 0 var(--status) 0;
     z-index: 5;
     background: color-mix(in srgb, #000 28%, transparent);
+  }
+
+  /* One tab is the file the breadcrumb already names, and a row of them is
+     a row of screen a phone cannot spare. Back and forward are the browser's. */
+  .ctx-tabs { display: none; }
+
+  /* The breadcrumb is the header: the Files button, then the path, which
+     scrolls sideways and is scrolled to its end by Workbench. */
+  .ctx-files {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 40px;
+    height: 40px;
+    margin: 0 4px 0 -8px;
+    border: none;
+    border-radius: 50%;
+    background: none;
+    color: var(--text);
+    cursor: pointer;
+  }
+  .ctx-files:active, .ctx-files[aria-expanded="true"] { background: var(--selected); }
+  .ctx-files svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.5; }
+  .ctx-breadcrumbs { height: 52px; font-size: 15px; box-shadow: 0 1px var(--chrome-line); position: relative; z-index: 1; }
+  .ctx-breadcrumbs [data-crumbs] { overflow-x: auto; scrollbar-width: none; }
+  .ctx-breadcrumbs [data-crumbs]::-webkit-scrollbar { display: none; }
+  .ctx-breadcrumbs [data-crumbs][data-clipped] { mask-image: linear-gradient(to right, transparent, #000 28px); }
+
+  /* The path is in the header now; the status bar keeps the agent and the branch. */
+  .ctx-status .right { display: none; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .ctx-workbench.drawer-open :is(.ctx-sidebar, .ctx-activity) { animation: ctx-drawer 0.18s ease-out; }
+    .ctx-scrim { animation: ctx-fade 0.18s ease-out; }
   }
 
   .ctx-resize-x, .ctx-resize-y, .ctx-minimap { display: none; }
