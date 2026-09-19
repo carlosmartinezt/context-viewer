@@ -296,6 +296,15 @@ export function Workbench({
 
   const crumbs = currentPath.split('?')[0].split('/').filter(Boolean)
 
+  /** Read the open document and the tree again, for a file that changed on
+   *  disk while it was open. The frame reloads itself, which keeps its scroll
+   *  position; router.refresh() is the tree and a folder's listing. */
+  const reload = () => {
+    paneRef.current?.querySelector('iframe')?.contentWindow?.location.reload()
+    startRefresh(() => router.refresh())
+    setRevision((r) => r + 1)
+  }
+
   return (
     <div
       ref={benchRef}
@@ -486,6 +495,16 @@ export function Workbench({
               </span>
             ))}
           </span>
+          <button
+            className="ctx-reload"
+            title="Reload"
+            aria-label="Reload"
+            data-spinning={refreshing ? '' : undefined}
+            disabled={refreshing}
+            onClick={reload}
+          >
+            <svg viewBox="0 0 24 24">{ACTIVITY_ICONS.refresh}</svg>
+          </button>
         </div>
 
         <div className="ctx-surface">

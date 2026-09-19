@@ -30,6 +30,12 @@
     if (doc && doc !== 'none') document.documentElement.setAttribute('data-doc-style', doc)
   } catch (e) {}
 
+  /*
+   * A swipe that runs past the end of the note stays in the note. Without
+   * this, iOS hands the rest of it to the page around the frame.
+   */
+  document.documentElement.style.overscrollBehaviorY = 'contain'
+
   var parentWindow = window.parent
   if (parentWindow === window) return // Opened directly, not framed. Do nothing.
 

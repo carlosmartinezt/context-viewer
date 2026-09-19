@@ -40,6 +40,9 @@ body {
 
 a { color: var(--accent); }
 
+/* Behind the workbench there is nothing to scroll to, so nothing may. */
+html:has(.ctx-workbench), body:has(.ctx-workbench) { height: 100%; overflow: hidden; overscroll-behavior: none; }
+
 /* The default scrollbar is a light chunky bar whatever the theme is under it,
    which is the single loudest way a dark theme gives itself away. This is the
    same overlay bar in both directions, drawn from the theme's own tokens. */
@@ -94,10 +97,13 @@ a { color: var(--accent); }
   display: grid;
   grid-template-columns: var(--activity) auto 4px 1fr;
   grid-template-rows: 1fr auto auto var(--status);
-  height: 100vh;
-  /* The visible height on a phone, between the address bar and the toolbar.
-     100vh is the height with both retracted, so the status bar sat under them. */
-  height: 100dvh;
+  /* Pinned to the window rather than sized to it. A height (100vh, then
+     100dvh) still left the page itself scrollable on iOS: a swipe in the note
+     that ran past its end dragged the whole workbench up, the header went off
+     the top, the status bar floated mid-screen, and the next swipes moved the
+     page instead of the note. */
+  position: fixed;
+  inset: 0;
   overflow: hidden;
   font-family: var(--ui);
   font-size: var(--ui-size);
@@ -528,6 +534,24 @@ a { color: var(--accent); }
 .ctx-breadcrumbs [data-crumbs] > a:last-child { color: var(--text); }
 .ctx-breadcrumbs a { color: inherit; text-decoration: none; }
 .ctx-breadcrumbs a:hover { color: var(--text); text-decoration: underline; }
+/* Reload: the document and the tree, read again from disk. */
+.ctx-reload {
+  margin-left: auto;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--chrome-text);
+  cursor: pointer;
+}
+.ctx-reload:hover { background: var(--hover); color: var(--text); }
+.ctx-reload svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; }
+.ctx-reload[data-spinning] svg { animation: ctx-spin 0.7s linear infinite; }
 .ctx-breadcrumbs .right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
 /* In the status bar now, so it is dressed as a status bar item: no border, no
    card, the strip's own height. VS Code's status items are text with a hover
@@ -1115,6 +1139,8 @@ a { color: var(--accent); }
   .ctx-breadcrumbs { height: 52px; font-size: 15px; box-shadow: 0 1px var(--chrome-line); position: relative; z-index: 1; }
   .ctx-breadcrumbs [data-crumbs] { overflow-x: auto; scrollbar-width: none; }
   .ctx-breadcrumbs [data-crumbs]::-webkit-scrollbar { display: none; }
+  .ctx-reload { width: 40px; height: 40px; margin-right: -8px; }
+  .ctx-reload svg { width: 21px; height: 21px; }
   .ctx-breadcrumbs [data-crumbs][data-clipped] { mask-image: linear-gradient(to right, transparent, #000 28px); }
 
   /* The path is in the header now; the status bar keeps the agent and the branch. */
